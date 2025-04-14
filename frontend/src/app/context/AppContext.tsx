@@ -115,10 +115,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
+  // Resume section - Amarjot
   const [resumes, setResumes] = useState<Resume[]>([]);
+  // Job posting section - Eren
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
+  // Optimization section - John
   const [optimizationResults, setOptimizationResults] = useState<OptimizationResult[]>([]);
 
+  // Auth section - Alden
   const login = async (email: string, password: string) => {
     await new Promise(resolve => setTimeout(resolve, 500));
     setIsAuthenticated(true);
@@ -136,6 +140,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser({ name, email });
   };
 
+  // Resume section - Amarjot
   const loadResumes = async () => {
     const data = await apiListResumes(readAccessToken());
     setResumes(data.map(mapResume));
@@ -156,6 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setResumes((prev) => prev.filter((resume) => resume.id !== id));
   };
 
+  // Job posting section - Eren
   const loadJobPostings = async () => {
     const data = await apiListJobPostings(readAccessToken());
     setJobPostings(data.map(mapJobPosting));
@@ -176,6 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setJobPostings((prev: JobPosting[]) => prev.filter((j) => j.id !== id));
   };
 
+  // Optimization section - John
   const runOptimization = async (resumeId: string, jobPostingId: string): Promise<OptimizationResult> => {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
