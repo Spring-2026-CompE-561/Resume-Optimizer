@@ -12,6 +12,8 @@ export function AuthLayout({ children, title }: AuthLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useApp();
+  const displayName = user?.name ?? user?.email ?? 'User';
+  const displayInitial = displayName.charAt(0).toUpperCase();
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, mobileLabel: 'Dashboard' },
@@ -20,8 +22,8 @@ export function AuthLayout({ children, title }: AuthLayoutProps) {
     { path: '/optimize', label: 'Optimize', icon: Sparkles, mobileLabel: 'Optimize' },
   ];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
@@ -72,9 +74,9 @@ export function AuthLayout({ children, title }: AuthLayoutProps) {
             {user && (
               <div className="flex items-center gap-3 px-4 py-2 bg-secondary/30 rounded-full">
                 <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
-                  {user.name.charAt(0)}
+                  {displayInitial}
                 </div>
-                <span className="text-foreground hidden sm:block">{user.name}</span>
+                <span className="text-foreground hidden sm:block">{displayName}</span>
               </div>
             )}
           </div>

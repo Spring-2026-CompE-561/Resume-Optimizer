@@ -42,14 +42,19 @@ export interface OptimizationResult {
   timestamp: string;
 }
 
+interface AppUser {
+  name: string | null;
+  email: string;
+}
+
 interface AppContextType {
   isAuthenticated: boolean;
-  user: { name: string; email: string } | null;
+  user: AppUser | null;
   resumes: Resume[];
   jobPostings: JobPosting[];
   optimizationResults: OptimizationResult[];
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void> | void;
   signup: (name: string, email: string, password: string) => Promise<void>;
   addResume: (file: File) => Promise<void>;
   deleteResume: (id: number) => Promise<void>;
@@ -113,7 +118,7 @@ function readAccessToken(): string {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
 
   // Resume section - Amarjot
   const [resumes, setResumes] = useState<Resume[]>([]);
