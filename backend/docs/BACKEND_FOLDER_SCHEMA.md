@@ -7,15 +7,12 @@ This backend structure follows the same core layout pattern as `proffessor-backe
 - `src/app/routes`
 - `src/app/api/v1`
 
-It adds project-specific directories for services, middleware, repositories, docs, storage, and Alembic migrations.
+It adds project-specific directories for services, exceptions, repository, docs, and storage.
 
 ## Tree
 
 ```text
 backend/
-├── alembic/
-│   └── versions/
-│       └── .gitkeep
 ├── docs/
 │   ├── BACKEND_FOLDER_SCHEMA.md
 │   └── implementation/
@@ -35,26 +32,17 @@ backend/
 │   │   │       └── .gitkeep
 │   │   ├── core/
 │   │   │   └── .gitkeep
-│   │   ├── middleware/
+│   │   ├── exceptions/
 │   │   │   └── .gitkeep
 │   │   ├── models/
 │   │   │   └── .gitkeep
-│   │   ├── repositories/
+│   │   ├── repository/
 │   │   │   └── .gitkeep
 │   │   ├── routes/
 │   │   │   └── .gitkeep
 │   │   ├── schemas/
 │   │   │   └── .gitkeep
-│   │   ├── services/
-│   │   │   ├── auth/
-│   │   │   │   └── .gitkeep
-│   │   │   ├── job_postings/
-│   │   │   │   └── .gitkeep
-│   │   │   ├── optimize/
-│   │   │   │   └── .gitkeep
-│   │   │   └── resumes/
-│   │   │       └── .gitkeep
-│   │   └── utils/
+│   │   └── services/
 │   │       └── .gitkeep
 │   └── test/
 │       ├── fixtures/
@@ -79,23 +67,20 @@ backend/
 ## Why This Schema
 
 1. Matches professor layout conventions for discoverability and grading consistency.
-2. Separates route layer (`routes`) from business logic (`services`) and persistence (`repositories`).
-3. Keeps migration scripts isolated in `alembic/versions`.
+2. Separates route layer (`routes`) from business logic (`services`) and persistence (`repository`).
+3. Uses `Base.metadata.create_all()` for table creation — no migration tooling needed.
 4. Keeps binary/text resume artifacts in `storage/*` and out of source packages.
 5. Includes `.gitkeep` in empty folders so the intended architecture is visible in Git from day one.
 
 ## Folder Responsibilities
 
-- `src/app/core`: settings, database session setup, auth/token primitives.
+- `src/app/core`: settings, database session setup, auth/token primitives, and shared dependencies.
 - `src/app/models`: SQLAlchemy models.
 - `src/app/schemas`: Pydantic request/response schemas.
 - `src/app/routes`: endpoint definitions.
 - `src/app/api/v1`: router composition and version prefixing.
-- `src/app/services`: business logic split by domain (`auth`, `resumes`, `job_postings`, `optimize`).
-- `src/app/repositories`: DB query layer.
-- `src/app/middleware`: request ID, logging, rate limit, and global exception mapping.
-- `src/app/utils`: shared helper utilities.
+- `src/app/services`: business logic (flat — one file per domain, e.g. `auth_service.py`, `scrape_service.py`).
+- `src/app/repository`: DB query layer (flat — one file per domain, e.g. `auth_repository.py`).
+- `src/app/exceptions`: pre-defined `HTTPException` instances grouped by domain (e.g. `auth_exceptions.py`).
 - `src/test`: unit/integration/fixtures.
-- `alembic/versions`: migration history.
 - `docs/implementation`: task ownership and execution plans.
-
