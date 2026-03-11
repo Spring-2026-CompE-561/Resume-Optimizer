@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "Resume Optimizer API"
     debug: bool = False
+    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     # Database
     database_url: str = "sqlite:///./resume_optimizer.db"

@@ -1,17 +1,25 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from src.app import models  # noqa: F401 - register all tables on Base
+from src.app.api.v1.routes import api_router
 from src.app.core.database import Base, engine
-from src.app.models import password_reset_token  # noqa: F401 - register table
-from src.app.models import refresh_token  # noqa: F401 - register table
-from src.app.models import user  # noqa: F401 - register table
-from src.app.routes import auth
+from src.app.core.settings import settings
 
 app = FastAPI(
-    title="Resume Optimizer API",
+    title=settings.app_name,
     version="0.1.0",
 )
 
-app.include_router(auth.router, prefix="/api/v1")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api_router)
 
 
 @app.on_event("startup")
@@ -20,5 +28,5 @@ def on_startup() -> None:
 
 
 @app.get("/health")
-def health_check():
+def health_check() -> dict[str, str]:
     return {"status": "ok"}
