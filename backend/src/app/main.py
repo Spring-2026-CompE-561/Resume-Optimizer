@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app import models
 
 app = FastAPI(
     title="Resume Optimizer API",
