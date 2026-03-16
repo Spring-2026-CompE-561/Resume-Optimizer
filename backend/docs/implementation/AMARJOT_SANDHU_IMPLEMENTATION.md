@@ -109,4 +109,4 @@ resume_parse_failed_exception = HTTPException(
 
 ## Note: Update Route
 
-The PDF grading criteria includes CRUD (Create, Read, Update, Delete). If your wireframe included a `PUT /api/v1/resumes/{id}` endpoint, add it here. If not (e.g. users delete and re-upload instead), no update route is needed — just confirm this matches your wireframe design.
+The grading criteria includes CRUD (Create, Read, Update, Delete). If your wireframe included a `PUT /api/v1/resumes/{id}` endpoint, add it here. If not (e.g. users delete and re-upload instead), no update route is needed — just confirm this matches your wireframe design.

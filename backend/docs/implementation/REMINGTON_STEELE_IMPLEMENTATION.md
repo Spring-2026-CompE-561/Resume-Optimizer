@@ -89,7 +89,7 @@ email_in_use_exception = HTTPException(
 - **No other custom middleware files** (`request_id.py`, `error_handler.py`, `rate_limit.py`) — keep the stack minimal.
 
 ## 5) Submission: `requirements.txt`
-- The PDF submission guidelines require a `requirements.txt`.
+- The submission guidelines require a `requirements.txt`.
 - Generate it before submitting with: `uv export --format requirements-txt > requirements.txt`
 - Do not commit this file to the repo during development — generate it only at submission time.
 
