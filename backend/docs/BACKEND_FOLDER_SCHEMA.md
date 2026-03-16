@@ -42,8 +42,9 @@ backend/
 │   │   │   └── .gitkeep
 │   │   ├── schemas/
 │   │   │   └── .gitkeep
-│   │   └── services/
-│   │       └── .gitkeep
+│   │   ├── services/
+│   │   │   └── .gitkeep
+│   │   └── main.py
 │   └── test/
 │       ├── fixtures/
 │       │   └── .gitkeep
@@ -59,7 +60,6 @@ backend/
 │   └── uploads/
 │       └── .gitkeep
 ├── .python-version
-├── main.py
 ├── pyproject.toml
 └── README.md
 ```

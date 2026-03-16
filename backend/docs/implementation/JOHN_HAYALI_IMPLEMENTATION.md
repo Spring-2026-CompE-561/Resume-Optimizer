@@ -56,6 +56,7 @@ backend/src/test/integration/test_optimize_route.py
 - No migration files — Remington's `Base.metadata.create_all()` creates the `optimization_runs` table on startup.
 - Keep records even if linked resume/job posting is deleted: set `nullable=True` on the FK columns and use `ondelete="SET NULL"` on the ForeignKey definition in the model (no Alembic needed — SQLAlchemy handles this in `create_all`).
 - Route file (`routes/optimize.py`) injects `db` via `Depends(get_db)` and current user via `Depends(get_current_user)`.
+- Use Pydantic v2 style on ORM-backed schemas: `model_config = {"from_attributes": True}`.
 
 ## 5) Exception Definitions
 - Create `exceptions/optimize_exceptions.py` with **pre-defined `HTTPException` instances** (professor-backend pattern). Do **not** use string error codes or a structured error envelope:
