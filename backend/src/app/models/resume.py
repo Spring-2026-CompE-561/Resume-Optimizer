@@ -3,8 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from app.core.database import Base
-
+from src.app.core.database import Base
 
 class Resume(Base):
     # SQLAlchemy will create/use a table named "resumes" for this model.
@@ -44,8 +43,6 @@ class Resume(Base):
         nullable=False,
     )
 
-    # Optional relationship back to the User model.
-    # This lets code do things like resume.user.
     # We are not using back_populates here yet because the User model
     # does not currently appear to define a matching resumes relationship.
     user = relationship("User")
