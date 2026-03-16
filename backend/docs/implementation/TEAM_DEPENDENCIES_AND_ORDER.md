@@ -24,7 +24,7 @@ This document explains how each backend owner connects to the others, what must 
 - Create app bootstrap (`main.py`) and router wiring (`api/v1/routes.py`).
 - Set up `core/database.py` with SQLAlchemy engine, `SessionLocal`, `Base`, and `get_db()`.
 - Call `Base.metadata.create_all(bind=engine)` in `main.py` — **no Alembic**.
-- Add `CORSMiddleware` — the only middleware layer.
+- Add `CORSMiddleware` and request logging middleware (`@app.middleware("http")`) in `main.py`.
 - Share the exception pattern with the team: each domain owner creates `exceptions/<domain>_exceptions.py` with pre-defined `HTTPException` instances (see professor-backend pattern).
 
 Why first:

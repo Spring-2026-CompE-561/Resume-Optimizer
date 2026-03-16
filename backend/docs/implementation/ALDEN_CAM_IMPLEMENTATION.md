@@ -14,7 +14,6 @@
 ## Files to Create
 
 ```text
-backend/src/app/core/settings.py
 backend/src/app/core/auth.py
 backend/src/app/core/dependencies.py
 backend/src/app/routes/auth.py
@@ -32,8 +31,7 @@ backend/src/test/integration/test_auth_routes.py
 ## Implementation Detail
 
 ## 1) Config + Security Primitives
-- `core/settings.py` uses `pydantic_settings.BaseSettings` with `.env` loading (see professor-backend pattern).
-- Add settings for:
+- `core/settings.py` is created by Remington. Add the following auth-specific fields to it:
   - `SECRET_KEY`
   - `ALGORITHM` (default `"HS256"`)
   - `ACCESS_TOKEN_EXPIRE_MINUTES`

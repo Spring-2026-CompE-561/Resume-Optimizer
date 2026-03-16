@@ -57,6 +57,7 @@ backend/src/test/integration/test_resume_routes.py
   - `services/resume_parse_service.py`
   - `services/resume_skill_service.py`
 - Route file (`routes/resumes.py`) injects `db` via `Depends(get_db)` and the current user via `Depends(get_current_user)` from Alden's `core/dependencies.py`.
+- Use Pydantic v2 style on ORM-backed schemas: `model_config = {"from_attributes": True}`.
 
 ## 5) Exception Definitions
 - Create `exceptions/resume_exceptions.py` with **pre-defined `HTTPException` instances** (professor-backend pattern). Do **not** use string error codes or a structured error envelope:
@@ -105,3 +106,7 @@ resume_parse_failed_exception = HTTPException(
 2. File validation/parsing failures raise pre-defined `HTTPException` instances.
 3. Resume + resume_skill data persists with correct foreign keys.
 4. Tests cover both success and failure paths.
+
+## Note: Update Route
+
+The PDF grading criteria includes CRUD (Create, Read, Update, Delete). If your wireframe included a `PUT /api/v1/resumes/{id}` endpoint, add it here. If not (e.g. users delete and re-upload instead), no update route is needed — just confirm this matches your wireframe design.
