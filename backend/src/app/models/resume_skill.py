@@ -1,8 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.core.database import Base
-
+from src.app.core.database import Base
 
 class ResumeSkill(Base):
     # SQLAlchemy will create/use a table named "resume_skills" for this model.
@@ -14,10 +13,6 @@ class ResumeSkill(Base):
     # Connects each skill row back to the parent resume.
     # ForeignKey("resumes.id") means every ResumeSkill must belong to a valid Resume.
     resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=False)
-
-    # Optional grouping label for the skill, such as "Languages", "Frameworks",
-    # or "Tools". Nullable is okay because extracted skills may not always have
-    # a clean category assigned yet.
     category = Column(String, nullable=True)
 
     # The actual extracted skill value, such as "Python" or "FastAPI".
