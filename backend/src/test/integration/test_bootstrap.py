@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import inspect
 
+from src.app.api.v1.routes import DOMAIN_ROUTERS
 from src.app.core.database import Base, engine
 from src.app.main import on_startup
 
@@ -9,6 +10,15 @@ def test_api_v1_routes_are_reachable(client: TestClient) -> None:
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "api": "v1"}
+
+
+def test_api_v1_registers_expected_domain_routers() -> None:
+    assert {router.prefix for router in DOMAIN_ROUTERS} == {
+        "/auth",
+        "/resumes",
+        "/job-postings",
+        "/optimize",
+    }
 
 
 def test_api_v1_database_health_route_is_reachable(client: TestClient) -> None:
