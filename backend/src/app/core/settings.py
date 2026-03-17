@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,6 +12,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "Resume Optimizer API"
     debug: bool = False
+    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     # Database
     database_url: str = "sqlite:///./resume_optimizer.db"
@@ -23,6 +25,19 @@ class Settings(BaseSettings):
 
     # Password reset
     password_reset_token_expire_minutes: int = 60
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def parse_debug(cls, value: bool | str) -> bool | str:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on", "debug", "dev", "development"}:
+                return True
+            if normalized in {"0", "false", "no", "off", "release", "prod", "production"}:
+                return False
+        return value
 
 
 settings = Settings()

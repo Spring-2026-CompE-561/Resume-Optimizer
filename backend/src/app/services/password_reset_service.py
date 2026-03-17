@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,7 @@ def request_password_reset(db: Session, email: str) -> str | None:
         return None
     plain_token = secrets.token_urlsafe(32)
     token_hash = _hash_token(plain_token)
-    expires_at = datetime.now(timezone.utc) + timedelta(
+    expires_at = datetime.utcnow() + timedelta(
         minutes=settings.password_reset_token_expire_minutes
     )
     AuthRepository.create_password_reset_token(
@@ -39,7 +39,7 @@ def reset_password(db: Session, token: str, new_password: str) -> None:
     prt = AuthRepository.find_password_reset_token_by_hash(db, token_hash)
     if not prt:
         raise reset_token_invalid_exception
-    if prt.expires_at < datetime.now(timezone.utc):
+    if prt.expires_at < datetime.utcnow():
         raise reset_token_invalid_exception
     user = AuthRepository.find_user_by_id(db, prt.user_id)
     if not user:
