@@ -1,10 +1,19 @@
 from fastapi import APIRouter, HTTPException, status
 
 from src.app.core import database as database_core
-from src.app.routes import auth
+from src.app.routes import auth, job_postings, optimize, resumes
+
+DOMAIN_ROUTERS = (
+    auth.api_router,
+    resumes.api_router,
+    job_postings.api_router,
+    optimize.api_router,
+)
 
 api_router = APIRouter(prefix="/api/v1")
-api_router.include_router(auth.router)
+
+for router in DOMAIN_ROUTERS:
+    api_router.include_router(router)
 
 
 @api_router.get("/health", tags=["meta"])
