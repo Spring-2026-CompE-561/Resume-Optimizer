@@ -5,13 +5,30 @@ from sqlalchemy import inspect
 
 from src.app.api.v1.routes import DOMAIN_ROUTERS
 from src.app.core.database import Base, engine
+from src.app.core.settings import settings
 from src.app.main import app
+
+
+def test_root_health_route_is_reachable(client: TestClient) -> None:
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 
 
 def test_api_v1_routes_are_reachable(client: TestClient) -> None:
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "api": "v1"}
+
+
+def test_openapi_metadata_matches_settings(client: TestClient) -> None:
+    response = client.get(settings.openapi_url)
+
+    assert response.status_code == 200
+    info = response.json()["info"]
+    assert info["title"] == settings.app_name
+    assert info["version"] == settings.app_version
+    assert info["description"] == settings.app_description
 
 
 def test_api_v1_registers_expected_domain_routers() -> None:
@@ -59,15 +76,10 @@ def test_startup_creates_registered_tables() -> None:
 
     inspector = inspect(engine)
     table_names = set(inspector.get_table_names())
+    registered_tables = set(Base.metadata.tables)
 
-    assert {
-        "users",
-        "refresh_tokens",
-        "password_reset_tokens",
-        "job_postings",
-        "keywords",
-        "job_posting_skills",
-    }.issubset(table_names)
+    assert registered_tables
+    assert registered_tables.issubset(table_names)
 
 
 def test_unknown_routes_return_404(client: TestClient) -> None:

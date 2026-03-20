@@ -5,5 +5,8 @@ Key backend docs:
 - `docs/implementation/REMINGTON_STEELE_IMPLEMENTATION.md`
 - `docs/EXCEPTION_PATTERN.md`
 
+Local development:
+- `uv run uvicorn src.app.main:app --reload`
+
 Quality checks:
 - `bash scripts/check_backend.sh`
