@@ -5,7 +5,7 @@ from sqlalchemy import inspect
 
 from src.app.api.v1.routes import DOMAIN_ROUTERS
 from src.app.core.database import Base, engine
-from src.app.main import on_startup
+from src.app.main import app
 
 
 def test_api_v1_routes_are_reachable(client: TestClient) -> None:
@@ -53,7 +53,9 @@ def test_request_logging_middleware_logs_method_path_and_status(
 
 def test_startup_creates_registered_tables() -> None:
     Base.metadata.drop_all(bind=engine)
-    on_startup()
+
+    with TestClient(app):
+        pass
 
     inspector = inspect(engine)
     table_names = set(inspector.get_table_names())
