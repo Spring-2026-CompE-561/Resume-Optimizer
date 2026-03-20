@@ -1,3 +1,5 @@
+import logging
+
 from fastapi.testclient import TestClient
 from sqlalchemy import inspect
 
@@ -34,6 +36,19 @@ def test_api_v1_database_health_route_returns_503_when_unavailable(
     response = client.get("/api/v1/health/db")
     assert response.status_code == 503
     assert response.json()["detail"] == "Database is unavailable"
+
+
+def test_request_logging_middleware_logs_method_path_and_status(
+    client: TestClient, caplog
+) -> None:
+    caplog.set_level(logging.INFO, logger="src.app.main")
+
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    assert any(
+        record.message == "GET /api/v1/health -> 200" for record in caplog.records
+    )
 
 
 def test_startup_creates_registered_tables() -> None:
