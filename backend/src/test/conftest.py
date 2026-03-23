@@ -6,9 +6,6 @@ from sqlalchemy.pool import StaticPool
 
 from src.app.core.database import Base, get_db
 from src.app.main import app
-from src.app.models.password_reset_token import PasswordResetToken
-from src.app.models.refresh_token import RefreshToken
-from src.app.models.user import User
 
 SQLITE_TEST_URL = "sqlite:///:memory:"
 
