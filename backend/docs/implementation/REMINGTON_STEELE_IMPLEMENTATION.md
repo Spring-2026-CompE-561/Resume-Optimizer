@@ -1,7 +1,7 @@
 # Remington Steele Backend Implementation Plan
 
 ## Ownership
-- Primary domain: Platform foundation, DB setup, CORS, and CI quality gates.
+- Primary domain: Platform foundation, DB setup, CORS, request logging, and CI quality gates.
 - Cross-cutting ownership:
   - exception pattern shared with the whole team (pre-defined `HTTPException` instances in `exceptions/` modules)
   - DB table creation via `Base.metadata.create_all()`
@@ -23,7 +23,8 @@ backend/src/test/integration/test_bootstrap.py
 - Build `FastAPI` app in `src/app/main.py`.
 - Call `Base.metadata.create_all(bind=engine)` at startup to create all tables — **no Alembic, no migration files**.
 - Import and register the central `api_router` from `src/app/api/v1/routes.py`.
-- Add `CORSMiddleware` in `main.py` (the only middleware layer — matches professor-backend exactly).
+- Add `CORSMiddleware` in `main.py`.
+- Add a request logging middleware in `main.py` using `@app.middleware("http")` — logs method, path, and response status code. No separate file needed.
 - `api/v1/routes.py` creates one `APIRouter(prefix="/api/v1")` and includes each domain router:
   - auth
   - resumes
@@ -37,6 +38,12 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title=settings.app_name, ...)
 app.include_router(api_router)
 app.add_middleware(CORSMiddleware, allow_origins=[...], ...)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    response = await call_next(request)
+    print(f"{request.method} {request.url.path} -> {response.status_code}")
+    return response
 
 # api/v1/routes.py
 api_router = APIRouter(prefix="/api/v1")
@@ -75,12 +82,18 @@ email_in_use_exception = HTTPException(
 - Routes and services `raise` these pre-built instances directly — no global error-handler middleware needed.
 - Remington must share this pattern with the team before domain work begins so everyone follows the same approach.
 
-## 4) CORS and Settings
+## 4) CORS, Logging, and Settings
 - `core/settings.py` uses `pydantic_settings.BaseSettings` with `.env` loading — same as professor-backend.
 - Add `CORSMiddleware` in `main.py` for allowed origins.
-- **No custom middleware files** (`request_id.py`, `error_handler.py`, `logging.py`, `rate_limit.py`) — professor-backend does not use any of these; keep the stack minimal.
+- Add request logging via `@app.middleware("http")` in `main.py` — no separate middleware file needed.
+- **No other custom middleware files** (`request_id.py`, `error_handler.py`, `rate_limit.py`) — keep the stack minimal.
 
-## 5) CI + Test Gate
+## 5) Submission: `requirements.txt`
+- The submission guidelines require a `requirements.txt`.
+- Generate it before submitting with: `uv export --format requirements-txt > requirements.txt`
+- Do not commit this file to the repo during development — generate it only at submission time.
+
+## 6) CI + Test Gate
 - Add baseline CI commands:
   - lint (ruff)
   - type/format checks if configured
@@ -99,5 +112,6 @@ email_in_use_exception = HTTPException(
 
 1. App boots with versioned router architecture matching professor-backend structure.
 2. All domain tables are created via `Base.metadata.create_all()` on startup.
-3. Exception pattern is documented and shared with the team before domain work begins.
-4. CI catches regressions before merge.
+3. Request logging middleware is active and prints method, path, and status for every request.
+4. Exception pattern is documented and shared with the team before domain work begins.
+5. CI catches regressions before merge.

@@ -57,6 +57,7 @@ backend/src/test/integration/test_job_posting_routes.py
 - No migration files — Remington's `Base.metadata.create_all()` creates tables on startup.
 - Ensure cascade delete from job posting to keywords and job_posting_skills is set on the SQLAlchemy relationship (e.g., `cascade="all, delete-orphan"`).
 - Route file (`routes/job_postings.py`) injects `db` via `Depends(get_db)` and the current user via `Depends(get_current_user)` from Alden's `core/dependencies.py`.
+- Use Pydantic v2 style on ORM-backed schemas: `model_config = {"from_attributes": True}`.
 
 ## 5) Exception Definitions
 - Create `exceptions/job_posting_exceptions.py` with **pre-defined `HTTPException` instances** (professor-backend pattern). Do **not** use string error codes or a structured error envelope:
@@ -100,3 +101,7 @@ keyword_extraction_failed_exception = HTTPException(
 2. Keywords and skills are generated and stored reliably.
 3. Errors are pre-defined `HTTPException` instances raised directly.
 4. All route and service tests pass.
+
+## Note: Update Route
+
+The grading criteria includes CRUD (Create, Read, Update, Delete). If your wireframe included a `PUT /api/v1/job-postings/{id}` endpoint, add it here. If not (e.g. users delete and re-submit a URL instead), no update route is needed — just confirm this matches your wireframe design.
