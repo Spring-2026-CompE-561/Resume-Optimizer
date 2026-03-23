@@ -1,8 +1,4 @@
-from collections.abc import Iterable
-
-
 class ResumeSkillService:
-    # Simple starter set; expand later if your team wants broader extraction.
     KNOWN_SKILLS = {
         "python": "Languages",
         "java": "Languages",
