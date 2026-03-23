@@ -2,6 +2,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from src.app.core.auth import (
     create_access_token,
@@ -21,7 +22,11 @@ SQLITE_TEST_URL = "sqlite:///:memory:"
 
 @pytest.fixture
 def db_session():
-    engine = create_engine(SQLITE_TEST_URL, connect_args={"check_same_thread": False})
+    engine = create_engine(
+        SQLITE_TEST_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = Session()
@@ -92,7 +97,7 @@ def test_login_returns_tokens(db_session):
 def test_login_wrong_password_raises(db_session):
     auth_service.create_user_account(
         db_session,
-        SignupRequest(email="wrong@example.com", password="correct"),
+        SignupRequest(email="wrong@example.com", password="correct1"),
     )
     with pytest.raises(HTTPException) as exc_info:
         auth_service.validate_login(
