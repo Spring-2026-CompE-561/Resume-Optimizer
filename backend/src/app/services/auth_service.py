@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from src.app.core.auth import create_access_token, get_password_hash, verify_password, verify_token
+from src.app.core.auth import create_access_token, get_password_hash, verify_password
 from src.app.core.settings import settings
 from src.app.exceptions.auth_exceptions import (
     email_in_use_exception,
