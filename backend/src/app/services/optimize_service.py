@@ -1,5 +1,3 @@
-from time import perf_counter
-
 from sqlalchemy.orm import Session
 
 from src.app.exceptions.job_posting_exceptions import job_posting_not_found_exception
@@ -15,48 +13,32 @@ from src.app.repository.resume_repository import ResumeRepository
 from src.app.services import ai_client, prompt_builder
 
 
-def _extract_prioritized_keywords(job_posting) -> list[str]:
+def get_keywords_from_job_posting(job_posting):
     keywords = getattr(job_posting, "keywords", []) or []
-    sorted_keywords = sorted(
-        keywords,
-        key=lambda k: (-float(getattr(k, "significance_score", 0.0)), getattr(k, "term", "")),
-    )
-
+    result = []
     seen = set()
-    ordered_terms: list[str] = []
-
-    for keyword in sorted_keywords:
-        term = (getattr(keyword, "term", "") or "").strip()
-        lowered = term.lower()
-        if term and lowered not in seen:
-            seen.add(lowered)
-            ordered_terms.append(term)
-
-    return ordered_terms
+    for keyword in keywords:
+        term = getattr(keyword, "term", "").strip()
+        if term and term.lower() not in seen:
+            seen.add(term.lower())
+            result.append(term)
+    return result
 
 
-def _normalize_suggestions(raw_suggestions) -> list[str]:
-    if isinstance(raw_suggestions, list):
-        return [str(item).strip() for item in raw_suggestions if str(item).strip()]
-
-    if isinstance(raw_suggestions, str):
-        normalized: list[str] = []
-        for line in raw_suggestions.splitlines():
+def parse_suggestions(raw):
+    if isinstance(raw, list):
+        return [str(item).strip() for item in raw if str(item).strip()]
+    if isinstance(raw, str):
+        result = []
+        for line in raw.splitlines():
             cleaned = line.strip().lstrip("-").strip()
             if cleaned:
-                normalized.append(cleaned)
-        return normalized
-
+                result.append(cleaned)
+        return result
     return []
 
 
-def optimize_resume_for_user(
-    *,
-    db: Session,
-    user: User,
-    resume_id: int,
-    job_posting_id: int,
-):
+def optimize_resume_for_user(*, db: Session, user: User, resume_id: int, job_posting_id: int):
     resume = ResumeRepository.get_by_id(db, resume_id)
     if not resume or resume.user_id != user.id:
         raise resume_not_found_exception
@@ -65,36 +47,27 @@ def optimize_resume_for_user(
     if not job_posting or job_posting.owner_id != user.id:
         raise job_posting_not_found_exception
 
-    prioritized_keywords = _extract_prioritized_keywords(job_posting)
+    keywords = get_keywords_from_job_posting(job_posting)
 
     prompt = prompt_builder.build_optimize_prompt(
         resume_text=resume.parsed_text or "",
         job_description=job_posting.description or "",
-        prioritized_keywords=prioritized_keywords,
+        prioritized_keywords=keywords,
     )
-
-    started = perf_counter()
 
     try:
         ai_result = ai_client.optimize_resume(
             prompt=prompt,
             resume_text=resume.parsed_text or "",
-            prioritized_keywords=prioritized_keywords,
+            prioritized_keywords=keywords,
         )
-    except ai_client.AIRateLimitError as exc:
-        raise ai_rate_limited_exception from exc
-    except ai_client.AIProviderError as exc:
-        raise ai_optimization_failed_exception from exc
-    except Exception as exc:
-        raise ai_optimization_failed_exception from exc
+    except ai_client.AIRateLimitError:
+        raise ai_rate_limited_exception
+    except Exception:
+        raise ai_optimization_failed_exception
 
-    latency_ms = int((perf_counter() - started) * 1000)
-
-    optimized_resume_text = (
-        str(ai_result.get("optimized_resume_text", "")).strip()
-        or (resume.parsed_text or "").strip()
-    )
-    suggestions = _normalize_suggestions(ai_result.get("suggestions"))
+    optimized_text = ai_result.get("optimized_resume_text", "").strip()
+    suggestions = parse_suggestions(ai_result.get("suggestions"))
     provider_name = ai_result.get("provider_name")
 
     return OptimizationRepository.create(
@@ -102,8 +75,8 @@ def optimize_resume_for_user(
         user_id=user.id,
         resume_id=resume.id,
         job_posting_id=job_posting.id,
-        optimized_resume_text=optimized_resume_text,
+        optimized_resume_text=optimized_text,
         suggestions=suggestions,
         provider_name=provider_name,
-        latency_ms=latency_ms,
+        latency_ms=None,
     )
