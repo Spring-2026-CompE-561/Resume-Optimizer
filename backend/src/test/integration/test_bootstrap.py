@@ -76,10 +76,18 @@ def test_startup_creates_registered_tables() -> None:
 
     inspector = inspect(engine)
     table_names = set(inspector.get_table_names())
-    registered_tables = set(Base.metadata.tables)
 
-    assert registered_tables
-    assert registered_tables.issubset(table_names)
+    assert {
+        "users",
+        "refresh_tokens",
+        "password_reset_tokens",
+        "resumes",
+        "resume_skills",
+        "job_postings",
+        "keywords",
+        "job_posting_skills",
+        "optimization_runs",
+    }.issubset(table_names)
 
 
 def test_unknown_routes_return_404(client: TestClient) -> None:

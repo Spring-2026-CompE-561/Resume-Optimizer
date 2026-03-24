@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from src.app.core.database import get_db
 from src.app.core.dependencies import CurrentUser
 from src.app.exceptions.job_posting_exceptions import job_posting_not_found_exception
-from src.app.models.user import User
 from src.app.repository.job_posting_repository import JobPostingRepository
 from src.app.schemas.job_posting import JobPostingCreate, JobPostingOut
 from src.app.services import keyword_service, scrape_service

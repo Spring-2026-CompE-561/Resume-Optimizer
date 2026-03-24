@@ -21,6 +21,6 @@ file_type_unsupported_exception = HTTPException(
 )
 
 resume_parse_failed_exception = HTTPException(
-    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
     detail="Failed to parse resume content",
 )
