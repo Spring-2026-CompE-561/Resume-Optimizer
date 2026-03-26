@@ -11,8 +11,8 @@ class OptimizationRun(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    resume_id = Column(Integer, ForeignKey("resumes.id"), nullable=True)
-    job_posting_id = Column(Integer, ForeignKey("job_postings.id"), nullable=True)
+    resume_id = Column(Integer, ForeignKey("resumes.id", ondelete="SET NULL"), nullable=True)
+    job_posting_id = Column(Integer, ForeignKey("job_postings.id", ondelete="SET NULL"), nullable=True)
     optimized_resume_text = Column(Text, nullable=False)
     suggestions = Column(JSON, nullable=False, default=list)
     provider_name = Column(String(100), nullable=True)
