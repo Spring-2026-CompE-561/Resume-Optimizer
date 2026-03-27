@@ -1,4 +1,4 @@
-import os
+from src.app.core.settings import settings
 
 
 class AIRateLimitError(Exception):
@@ -15,7 +15,7 @@ def optimize_resume(
     resume_text: str,
     prioritized_keywords: list[str],
 ) -> dict:
-    mode = os.getenv("OPTIMIZE_AI_MODE", "local").lower()
+    mode = settings.optimize_ai_mode
 
     if mode == "rate_limit":
         raise AIRateLimitError("AI provider rate limited the request")

@@ -2,6 +2,7 @@
 __pycache__/
 *.db
 .vscode/
+backend/resume_optimizer.db
 backend/storage/uploads/*
 backend/storage/parsed/*
 backend/storage/optimized/*
