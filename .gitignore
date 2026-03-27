@@ -2,3 +2,9 @@
 __pycache__/
 *.db
 .vscode/
+backend/storage/uploads/*
+backend/storage/parsed/*
+backend/storage/optimized/*
+!backend/storage/uploads/.gitkeep
+!backend/storage/parsed/.gitkeep
+!backend/storage/optimized/.gitkeep

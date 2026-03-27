@@ -11,7 +11,7 @@ resume_access_denied_exception = HTTPException(
 )
 
 file_too_large_exception = HTTPException(
-    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+    status_code=status.HTTP_413_CONTENT_TOO_LARGE,
     detail="File exceeds the maximum allowed size",
 )
 
@@ -21,6 +21,6 @@ file_type_unsupported_exception = HTTPException(
 )
 
 resume_parse_failed_exception = HTTPException(
-    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
     detail="Failed to parse resume content",
 )
