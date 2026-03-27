@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.core.database import Base
@@ -21,10 +21,10 @@ class OptimizationRun(Base):
         nullable=True,
         index=True,
     )
-    provider: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    prompt: Mapped[str] = mapped_column(Text, nullable=False)
-    optimized_text: Mapped[str] = mapped_column(Text, nullable=False)
-    failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    optimized_resume_text: Mapped[str] = mapped_column(Text, nullable=False)
+    suggestions: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    provider_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     user = relationship("User")
