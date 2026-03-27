@@ -36,3 +36,28 @@ def test_parse_file_raises_for_unsupported_mime(tmp_path: Path) -> None:
 
     assert exc_info.value.status_code == 422
     assert exc_info.value.detail == "Failed to parse resume content"
+
+def test_parse_pdf_returns_expected_text() -> None:
+    fixture_path = Path("src/test/fixtures/sample_resume.pdf")
+
+    result = ResumeParseService.parse_file(
+        str(fixture_path),
+        "application/pdf",
+    )
+
+    assert "John Doe" in result
+    assert "Python Developer" in result
+    assert "FastAPI" in result
+
+
+def test_parse_docx_returns_expected_text() -> None:
+    fixture_path = Path("src/test/fixtures/sample_resume.docx")
+
+    result = ResumeParseService.parse_file(
+        str(fixture_path),
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+
+    assert "John Doe" in result
+    assert "Python Developer" in result
+    assert "FastAPI" in result
