@@ -1,38 +1,38 @@
 from pathlib import Path
 
 import pytest
+from fastapi import HTTPException
 
-from src.app.exceptions.resume_exceptions import resume_parse_failed_exception
 from src.app.services.resume_parse_service import ResumeParseService
 
 
 def test_normalize_text_cleans_whitespace() -> None:
     raw_text = "Python   Developer\r\n\r\n\r\nFastAPI\t\tDocker"
-    normalized = ResumeParseService.normalize_text(raw_text)
+    result = ResumeParseService.normalize_text(raw_text)
 
-    assert normalized == "Python Developer\n\nFastAPI Docker"
+    assert result == "Python Developer\n\nFastAPI Docker"
 
 
-def test_parse_file_rejects_missing_path() -> None:
-    with pytest.raises(Exception) as exc_info:
+def test_parse_file_raises_when_file_missing() -> None:
+    with pytest.raises(HTTPException) as exc_info:
         ResumeParseService.parse_file(
             "does/not/exist.pdf",
             "application/pdf",
         )
 
-    assert exc_info.value.status_code == resume_parse_failed_exception.status_code
-    assert exc_info.value.detail == resume_parse_failed_exception.detail
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail == "Failed to parse resume content"
 
 
-def test_parse_file_rejects_unsupported_mime(tmp_path: Path) -> None:
+def test_parse_file_raises_for_unsupported_mime(tmp_path: Path) -> None:
     test_file = tmp_path / "resume.txt"
-    test_file.write_text("sample content")
+    test_file.write_text("sample content", encoding="utf-8")
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(HTTPException) as exc_info:
         ResumeParseService.parse_file(
             str(test_file),
             "text/plain",
         )
 
-    assert exc_info.value.status_code == resume_parse_failed_exception.status_code
-    assert exc_info.value.detail == resume_parse_failed_exception.detail
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail == "Failed to parse resume content"
