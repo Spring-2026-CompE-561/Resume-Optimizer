@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     # Password reset
     password_reset_token_expire_minutes: int = 60
 
+    # Optimization
+    optimize_ai_mode: str = "local"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: list[str] | str) -> list[str] | str:
@@ -71,6 +74,17 @@ class Settings(BaseSettings):
         valid_levels = {"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"}
         if normalized not in valid_levels:
             raise ValueError(f"Invalid log level: {value}")
+        return normalized
+
+    @field_validator("optimize_ai_mode", mode="before")
+    @classmethod
+    def normalize_optimize_ai_mode(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        valid_modes = {"local", "rate_limit", "fail"}
+        if normalized not in valid_modes:
+            raise ValueError(
+                f"Invalid optimize AI mode: {value}. Expected one of {sorted(valid_modes)}"
+            )
         return normalized
 
 
