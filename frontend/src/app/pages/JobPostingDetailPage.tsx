@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router';
 import { AuthLayout } from '../components/AuthLayout';
-import { useApp } from '../context/AppContext';
+import { useApp, JobPosting } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { ArrowLeft, Trash2, Sparkles, ExternalLink } from 'lucide-react';
 
 export function JobPostingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { jobPostings, deleteJobPosting } = useApp();
+  const { getJobPostingById, deleteJobPosting } = useApp();
 
-  const [job, setJob] = useState(jobPostings.find(j => j.id === id) ?? null);
-  const [loading, setLoading] = useState(false);
+  const [job, setJob] = useState<JobPosting | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
 
-    const found = jobPostings.find(j => j.id === id);
-    if (found) {
-      setJob(found);
-      setError(null);
-    } else {
-      setJob(null);
-      setError('Job posting not found.');
-    }
-    setLoading(false);
-  }, [id, jobPostings]);
+    setLoading(true);
+    setError(null);
+
+    getJobPostingById(Number(id))
+      .then((data: JobPosting) => setJob(data))
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Failed to load job posting.'),
+      )
+      .finally(() => setLoading(false));
+  }, [id]);
 
   if (loading) {
     return (
@@ -58,10 +58,13 @@ export function JobPostingDetailPage() {
     );
   }
 
-  const handleDelete = () => {
-    if (confirm(`Delete job posting: ${job.title}?`)) {
-      deleteJobPosting(job.id);
+  const handleDelete = async () => {
+    if (!confirm(`Delete job posting: ${job.title}?`)) return;
+    try {
+      await deleteJobPosting(job.id);
       navigate('/job-postings');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete job posting.');
     }
   };
 
