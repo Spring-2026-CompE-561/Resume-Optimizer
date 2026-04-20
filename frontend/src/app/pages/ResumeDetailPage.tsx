@@ -19,23 +19,26 @@ export function ResumeDetailPage() {
     setError(null);
 
     if (!id) {
-      setError('Resume id is missing.');
-      setResume(null);
-      setLoading(false);
-      return;
+        setError('Resume id is missing.');
+        setResume(null);
+        setLoading(false);
+        return;
     }
 
-    const foundResume = resumes.find((item) => item.id === id);
+    const numericId = Number(id);
 
-    if (!foundResume) {
-      setResume(null);
-      setLoading(false);
-      return;
+    if (Number.isNaN(numericId)) {
+        setError('Invalid resume id.');
+        setResume(null);
+        setLoading(false);
+        return;
     }
 
-    setResume(foundResume);
+    const foundResume = resumes.find((item) => item.id === numericId);
+
+    setResume(foundResume ?? null);
     setLoading(false);
-  }, [id, resumes]);
+    }, [id, resumes]);
 
   const handleDelete = async () => {
     if (!resume) return;
