@@ -67,7 +67,7 @@ export function ResumesPage() {
     setDragActive(false);
   };
 
-  const handleDelete = async (id: string, fileName: string) => {
+  const handleDelete = async (id: number, fileName: string) => {
     if (!confirm(`Delete ${fileName}?`)) return;
 
     setError(null);
