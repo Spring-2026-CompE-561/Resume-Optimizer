@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { AuthLayout } from '../components/AuthLayout';
 import { useApp } from '../context/AppContext';
@@ -7,11 +7,21 @@ import { Button } from '../components/Button';
 import { Briefcase, Link as LinkIcon, Trash2 } from 'lucide-react';
 
 export function JobPostingsPage() {
-  const { jobPostings, addJobPosting, deleteJobPosting } = useApp();
+  const { jobPostings, addJobPosting, deleteJobPosting, loadJobPostings } = useApp();
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoadingList(true);
+    setError(null);
+    loadJobPostings()
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Failed to load job postings.'),
+      )
+      .finally(() => setLoadingList(false));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +46,12 @@ export function JobPostingsPage() {
     }
   };
 
-  const handleDelete = (id: string, title: string) => {
-    if (confirm(`Delete job posting: ${title}?`)) {
-      deleteJobPosting(id);
+  const handleDelete = async (id: number, title: string) => {
+    if (!confirm(`Delete job posting: ${title}?`)) return;
+    try {
+      await deleteJobPosting(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete job posting.');
     }
   };
 
