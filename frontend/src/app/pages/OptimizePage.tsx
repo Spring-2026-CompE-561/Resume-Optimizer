@@ -20,11 +20,14 @@ export function OptimizePage() {
 
     setLoading(true);
     setResult(null);
+    setError(null);
+
     try {
       const optimization = await runOptimization(selectedResumeId, selectedJobId);
       setResult(optimization);
-    } catch (error) {
-      console.error('Optimization failed:', error);
+    } catch (err: any) {
+      const message = err?.detail || err?.message || 'Optimization failed. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -203,6 +206,13 @@ export function OptimizePage() {
           </div>
         )}
 
+        {/* Error State */}
+        {error && (
+        <div className="bg-red-50 border border-red-200 rounded-[20px] p-6 text-red-700">
+          <p className="font-medium">Optimization failed</p>
+          <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
         {/* Loading State */}
         {loading && (
           <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
