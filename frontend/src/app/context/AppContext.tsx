@@ -50,7 +50,7 @@ interface AppContextType {
   deleteJobPosting: (id: number) => Promise<void>;
   loadJobPostings: () => Promise<void>;
   getJobPostingById: (id: number) => Promise<JobPosting>;
-  runOptimization: (resumeId: string, jobPostingId: string) => Promise<OptimizationResult>;
+  runOptimization: (resumeId: number, jobPostingId: number) => Promise<OptimizationResult>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -163,30 +163,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setJobPostings((prev: JobPosting[]) => prev.filter((j) => j.id !== id));
   };
 
-  const runOptimization = async (resumeId: string, jobPostingId: string): Promise<OptimizationResult> => {
-    // Mock optimization process
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  const runOptimization = async (resumeId: number, jobPostingId: number): Promise<OptimizationResult> => {
+    const token = readAccessToken();
+    if (!token) throw new Error('Not authenticated');
 
-    const resume = resumes.find(r => r.id === resumeId);
-    const job = jobPostings.find(j => j.id === jobPostingId);
+    const result = await optimizeApi.runOptimization(resumeId, jobPostingId, token);
 
-    const result: OptimizationResult = {
-      id: Date.now().toString(),
-      resumeId,
-      jobPostingId,
-      optimizedText: `Optimized version of ${resume?.fileName} for ${job?.title}:\n\n${resume?.parsedText}\n\n[Optimized to highlight: ${job?.keywords.join(', ')}]`,
-      suggestions: [
-        `Emphasize experience with ${job?.keywords[0]} in the summary section`,
-        `Add specific project examples demonstrating ${job?.keywords[1]} skills`,
-        `Quantify achievements related to ${job?.keywords[2]} to show measurable impact`,
-        'Align technical skills section with job requirements',
-        'Tailor the professional summary to match the company culture',
-      ],
-      timestamp: new Date().toISOString(),
+    const mapped: OptimizationResult = {
+      id: result.id,
+      resumeId: result.resume_id,
+      jobPostingId: result.job_posting_id,
+      optimizedText: result.optimized_resume_text,
+      suggestions: result.suggestions,
+      timestamp: result.created_at,
     };
 
-    setOptimizationResults([...optimizationResults, result]);
-    return result;
+    setOptimizationResults((prev) => [...prev, mapped]);
+    return mapped;
   };
 
   return (
