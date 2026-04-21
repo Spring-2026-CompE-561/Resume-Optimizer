@@ -27,9 +27,9 @@ export interface JobPosting {
 }
 
 export interface OptimizationResult {
-  id: string;
-  resumeId: string;
-  jobPostingId: string;
+  id: number;
+  resumeId: number | null;
+  jobPostingId: number | null;
   optimizedText: string;
   suggestions: string[];
   timestamp: string;

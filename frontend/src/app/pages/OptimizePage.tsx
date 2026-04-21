@@ -93,7 +93,7 @@ export function OptimizePage() {
                       name="resume"
                       value={resume.id}
                       checked={selectedResumeId === resume.id}
-                      onChange={(e) => setSelectedResumeId(e.target.value)}
+                      onChange={(e) => setSelectedResumeId(Number(e.target.value))}
                       className="sr-only"
                     />
                     <div className="flex items-start gap-3">
@@ -139,7 +139,7 @@ export function OptimizePage() {
                       name="job"
                       value={job.id}
                       checked={selectedJobId === job.id}
-                      onChange={(e) => setSelectedJobId(e.target.value)}
+                      onChange={(e) => setSelectedJobId(Number(e.target.value))}
                       className="sr-only"
                     />
                     <div className="flex items-start gap-3">
