@@ -1,3 +1,8 @@
+import {
+  isAuthExemptPath,
+  readStoredAccessToken,
+  tryRefreshAccessToken,
+} from './authSession';
 import { API_BASE_URL } from './config';
 
 type ApiError = Error & { status?: number };
@@ -46,7 +51,14 @@ export function createAuthHeaders(accessToken: string): HeadersInit {
   return { Authorization: `Bearer ${accessToken}` };
 }
 
-export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+/**
+ * Shared API helper. On 401 (except auth paths), attempts one refresh + retry so the app can recover from an expired access token.
+ */
+export async function apiRequest<T>(
+  path: string,
+  init: RequestInit = {},
+  retryAfterRefresh = false,
+): Promise<T> {
   const headers = new Headers(init.headers);
   const isFormData = init.body instanceof FormData;
 
@@ -66,6 +78,18 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
 
   const text = await response.text();
   const data = parseResponseBody(text);
+
+  if (response.status === 401 && !retryAfterRefresh && !isAuthExemptPath(path)) {
+    const refreshed = await tryRefreshAccessToken();
+    if (refreshed) {
+      const retryHeaders = new Headers(init.headers);
+      const token = readStoredAccessToken();
+      if (token) {
+        retryHeaders.set('Authorization', `Bearer ${token}`);
+      }
+      return apiRequest<T>(path, { ...init, headers: retryHeaders }, true);
+    }
+  }
 
   if (!response.ok) {
     throwHttpError(response.status, data);
