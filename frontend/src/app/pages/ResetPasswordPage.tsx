@@ -4,9 +4,11 @@ import { PublicNav } from '../components/PublicNav';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { CheckCircle } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const { resetPassword } = useApp();
   const [searchParams] = useSearchParams();
   const queryToken = searchParams.get('token') ?? '';
 
@@ -35,7 +37,7 @@ export function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await resetPassword(token, password);
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
