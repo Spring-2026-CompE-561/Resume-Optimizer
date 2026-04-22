@@ -58,7 +58,8 @@ export function AuthLayout({ children, title }: AuthLayoutProps) {
 
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-border">
           <button
-            onClick={handleLogout}
+            type="button"
+            onClick={() => void handleLogout()}
             className="flex items-center gap-3 px-4 py-3 text-foreground hover:bg-secondary/30 rounded-xl transition-all w-full"
           >
             <LogOut className="w-5 h-5" />

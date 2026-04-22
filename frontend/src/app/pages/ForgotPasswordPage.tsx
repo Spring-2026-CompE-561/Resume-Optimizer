@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router';
 import { PublicNav } from '../components/PublicNav';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { useApp } from '../context/AppContext';
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const { forgotPassword } = useApp();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +17,8 @@ export function ForgotPasswordPage() {
     setError(null);
     setLoading(true);
     try {
-      navigate('/reset-link-sent');
+      await forgotPassword(email);
+      navigate('/reset-link-sent', { state: { email } });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to send reset link. Please try again.';
       setError(message);
