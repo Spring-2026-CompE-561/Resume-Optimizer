@@ -1,60 +1,79 @@
-const getBaseUrl = (): string => {
-  try {
-    const env = (import.meta as { env?: { VITE_API_BASE_URL?: string } }).env
-      ?.VITE_API_BASE_URL;
-    return env && env.length > 0 ? env.replace(/\/$/, '') : '';
-  } catch {
-    return '';
-  }
-};
+import { API_BASE_URL } from './config';
 
-async function parseErrorMessage(response: Response): Promise<string> {
+type ApiError = Error & { status?: number };
+
+function buildUrl(path: string): string {
+  return new URL(path, API_BASE_URL).toString();
+}
+
+function parseResponseBody(text: string): unknown {
+  if (!text) {
+    return undefined;
+  }
   try {
-    const data: unknown = await response.json();
-    if (data && typeof data === 'object' && 'detail' in data) {
-      const detail = (data as { detail: unknown }).detail;
-      if (typeof detail === 'string') {
-        return detail;
-      }
-      if (Array.isArray(detail) && detail.length > 0) {
-        const first = detail[0] as { msg?: string } | undefined;
-        if (first && typeof first.msg === 'string') {
-          return first.msg;
-        }
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
+  }
+}
+
+function createError(message: string, status: number): ApiError {
+  const error = new Error(message) as ApiError;
+  error.status = status;
+  return error;
+}
+
+function throwHttpError(status: number, data: unknown): never {
+  if (data && typeof data === 'object' && data !== null && 'detail' in data) {
+    const detail = (data as { detail: unknown }).detail;
+    if (typeof detail === 'string') {
+      throw createError(detail, status);
+    }
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0] as { msg?: string } | undefined;
+      if (first && typeof first.msg === 'string') {
+        throw createError(first.msg, status);
       }
     }
-  } catch {
-    // ignore
   }
-  return response.statusText || 'Request failed';
+  if (typeof data === 'string' && data) {
+    throw createError(data, status);
+  }
+  throw createError(`Request failed with status ${status}`, status);
+}
+
+export function createAuthHeaders(accessToken: string): HeadersInit {
+  return { Authorization: `Bearer ${accessToken}` };
 }
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const baseUrl = getBaseUrl();
-  const url = `${baseUrl}${path}`;
   const headers = new Headers(init.headers);
+  const isFormData = init.body instanceof FormData;
 
-  if (init.body !== undefined && typeof init.body === 'string' && !headers.has('Content-Type')) {
+  if (
+    !isFormData &&
+    init.body !== undefined &&
+    typeof init.body === 'string' &&
+    !headers.has('Content-Type')
+  ) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(url, {
+  const response = await fetch(buildUrl(path), {
     ...init,
     headers,
   });
 
+  const text = await response.text();
+  const data = parseResponseBody(text);
+
   if (!response.ok) {
-    const message = await parseErrorMessage(response);
-    throw new Error(message);
+    throwHttpError(response.status, data);
   }
 
   if (response.status === 204) {
     return undefined as T;
   }
 
-  const text = await response.text();
-  if (!text) {
-    return undefined as T;
-  }
-  return JSON.parse(text) as T;
+  return data as T;
 }
