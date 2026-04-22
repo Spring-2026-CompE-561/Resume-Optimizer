@@ -21,7 +21,10 @@ export function LoginPage() {
       await login(email, password);
       navigate('/dashboard');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Login failed. Please try again.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Login failed. Please try again.';
       setError(message);
     } finally {
       setLoading(false);
