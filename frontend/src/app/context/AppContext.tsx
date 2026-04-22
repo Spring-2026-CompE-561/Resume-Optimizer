@@ -142,8 +142,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [sessionReady, setSessionReady] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
 
+  // Resume section - Amarjot
   const [resumes, setResumes] = useState<Resume[]>([]);
+  // Job posting section - Eren
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
+  // Optimization section - John
   const [optimizationResults, setOptimizationResults] = useState<OptimizationResult[]>([]);
 
   const persistFromLoginResponse = (res: authApi.LoginResponse) => {
@@ -258,6 +261,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await authApi.resetPassword({ token, newPassword });
   };
 
+  // Resume section - Amarjot
   const loadResumes = async () => {
     const data = await apiListResumes(readAccessToken());
     setResumes(data.map(mapResume));
@@ -278,6 +282,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setResumes((prev) => prev.filter((resume) => resume.id !== id));
   };
 
+  // Job posting section - Eren
   const loadJobPostings = async () => {
     const data = await apiListJobPostings(readAccessToken());
     setJobPostings(data.map(mapJobPosting));
@@ -298,6 +303,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setJobPostings((prev: JobPosting[]) => prev.filter((j) => j.id !== id));
   };
 
+  // Optimization section - John
   const runOptimization = async (
     resumeId: string,
     jobPostingId: string,

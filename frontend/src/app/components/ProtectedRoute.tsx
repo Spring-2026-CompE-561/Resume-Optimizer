@@ -19,7 +19,10 @@ export function ProtectedRoute({ children }: Props) {
 
   if (!sessionReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background" role="status">
+      <div
+        className="min-h-screen flex items-center justify-center bg-background"
+        role="status"
+      >
         <p className="text-muted-foreground">Loading session…</p>
       </div>
     );
