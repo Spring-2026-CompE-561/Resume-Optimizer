@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import {
   listJobPostings as apiListJobPostings,
   createJobPosting as apiCreateJobPosting,
@@ -13,6 +19,14 @@ import {
   deleteResume as apiDeleteResume,
   type ResumeResponse,
 } from '../services/resumeApi';
+import * as authApi from '../services/authApi';
+
+export interface AuthUser {
+  id: number;
+  name: string | null;
+  email: string;
+  isActive: boolean;
+}
 
 export interface Resume {
   id: number;
@@ -44,13 +58,16 @@ export interface OptimizationResult {
 
 interface AppContextType {
   isAuthenticated: boolean;
-  user: { name: string; email: string } | null;
+  sessionReady: boolean;
+  user: AuthUser | null;
   resumes: Resume[];
   jobPostings: JobPosting[];
   optimizationResults: OptimizationResult[];
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
   addResume: (file: File) => Promise<void>;
   deleteResume: (id: number) => Promise<void>;
   loadResumes: () => Promise<void>;
@@ -63,6 +80,15 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+function mapUser(data: authApi.AuthUserResponse): AuthUser {
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    isActive: data.is_active,
+  };
+}
 
 function mapResume(data: ResumeResponse): Resume {
   const parsedText = data.parsed_text ?? '';
@@ -113,27 +139,123 @@ function readAccessToken(): string {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
   const [optimizationResults, setOptimizationResults] = useState<OptimizationResult[]>([]);
 
-  const login = async (email: string, password: string) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+  const persistFromLoginResponse = (res: authApi.LoginResponse) => {
+    localStorage.setItem('accessToken', res.access_token);
+    localStorage.setItem('refreshToken', res.refresh_token);
+    setUser(mapUser(res.user));
     setIsAuthenticated(true);
-    setUser({ name: 'Demo User', email });
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
+  const clearAuthState = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const done = () => {
+      if (!cancelled) {
+        setSessionReady(true);
+      }
+    };
+
+    const bootstrap = async () => {
+      const access = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+
+      if (!access && !refreshToken) {
+        done();
+        return;
+      }
+
+      const tryRefresh = async () => {
+        if (!refreshToken) {
+          return false;
+        }
+        const res = await authApi.refresh(refreshToken);
+        if (cancelled) {
+          return true;
+        }
+        persistFromLoginResponse(res);
+        return true;
+      };
+
+      try {
+        if (access) {
+          const me = await authApi.getMe(access);
+          if (cancelled) {
+            return;
+          }
+          setUser(mapUser(me));
+          setIsAuthenticated(true);
+        } else {
+          const ok = await tryRefresh();
+          if (!ok) {
+            clearAuthState();
+          }
+        }
+      } catch {
+        if (cancelled) {
+          return;
+        }
+        try {
+          const ok = await tryRefresh();
+          if (!ok) {
+            clearAuthState();
+          }
+        } catch {
+          clearAuthState();
+        }
+      } finally {
+        done();
+      }
+    };
+
+    void bootstrap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const res = await authApi.login({ email, password });
+    persistFromLoginResponse(res);
+  };
+
+  const logout = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      try {
+        await authApi.logout(refreshToken);
+      } catch {
+        // still clear local session
+      }
+    }
+    clearAuthState();
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setIsAuthenticated(true);
-    setUser({ name, email });
+    const res = await authApi.register({ name, email, password });
+    persistFromLoginResponse(res);
+  };
+
+  const forgotPassword = async (email: string) => {
+    await authApi.forgotPassword({ email });
+  };
+
+  const resetPassword = async (token: string, newPassword: string) => {
+    await authApi.resetPassword({ token, newPassword });
   };
 
   const loadResumes = async () => {
@@ -176,11 +298,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setJobPostings((prev: JobPosting[]) => prev.filter((j) => j.id !== id));
   };
 
-  const runOptimization = async (resumeId: string, jobPostingId: string): Promise<OptimizationResult> => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  const runOptimization = async (
+    resumeId: string,
+    jobPostingId: string,
+  ): Promise<OptimizationResult> => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const resume = resumes.find(r => r.id.toString() === resumeId);
-    const job = jobPostings.find(j => j.id === Number(jobPostingId));
+    const resume = resumes.find((r) => r.id.toString() === resumeId);
+    const job = jobPostings.find((j) => j.id === Number(jobPostingId));
 
     const result: OptimizationResult = {
       id: Date.now().toString(),
@@ -205,6 +330,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         isAuthenticated,
+        sessionReady,
         user,
         resumes,
         jobPostings,
@@ -212,6 +338,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         signup,
+        forgotPassword,
+        resetPassword,
         addResume,
         deleteResume,
         loadResumes,
