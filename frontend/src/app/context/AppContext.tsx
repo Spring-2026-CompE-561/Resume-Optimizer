@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from 'react';
 import {
@@ -20,6 +21,14 @@ import {
   type ResumeResponse,
 } from '../services/resumeApi';
 import * as authApi from '../services/authApi';
+import {
+  AUTH_CLEARED_EVENT,
+  AUTH_REFRESH_EVENT,
+  readStoredAccessToken,
+  readStoredRefreshToken,
+  tryRefreshAccessToken,
+  type LoginResponsePayload,
+} from '../lib/authSession';
 
 export interface AuthUser {
   id: number;
@@ -60,6 +69,8 @@ interface AppContextType {
   isAuthenticated: boolean;
   sessionReady: boolean;
   user: AuthUser | null;
+  /** Current access token for `apiRequest` / Remington; null if logged out. */
+  getAccessToken: () => string | null;
   resumes: Resume[];
   jobPostings: JobPosting[];
   optimizationResults: OptimizationResult[];
@@ -129,8 +140,8 @@ function mapJobPosting(data: JobPostingOut): JobPosting {
   };
 }
 
-function readAccessToken(): string {
-  const token = localStorage.getItem('accessToken');
+function readAccessTokenOrThrow(): string {
+  const token = readStoredAccessToken();
   if (!token) {
     throw new Error('You must be logged in to perform this action.');
   }
@@ -149,19 +160,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Optimization section - John
   const [optimizationResults, setOptimizationResults] = useState<OptimizationResult[]>([]);
 
-  const persistFromLoginResponse = (res: authApi.LoginResponse) => {
+  const getAccessToken = useCallback((): string | null => readStoredAccessToken(), []);
+
+  const persistFromLoginResponse = useCallback((res: authApi.LoginResponse) => {
     localStorage.setItem('accessToken', res.access_token);
     localStorage.setItem('refreshToken', res.refresh_token);
     setUser(mapUser(res.user));
     setIsAuthenticated(true);
-  };
+  }, []);
 
-  const clearAuthState = () => {
+  const clearAuthState = useCallback(() => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     setUser(null);
     setIsAuthenticated(false);
-  };
+  }, []);
+
+  // Sync React state when the shared `api` layer refreshes tokens or the session is cleared.
+  useEffect(() => {
+    const onCleared = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+    };
+    const onRefreshed = (e: Event) => {
+      const d = (e as CustomEvent<LoginResponsePayload>).detail;
+      if (d?.user) {
+        setUser(mapUser(d.user));
+        setIsAuthenticated(true);
+      }
+    };
+    window.addEventListener(AUTH_CLEARED_EVENT, onCleared);
+    window.addEventListener(AUTH_REFRESH_EVENT, onRefreshed);
+    return () => {
+      window.removeEventListener(AUTH_CLEARED_EVENT, onCleared);
+      window.removeEventListener(AUTH_REFRESH_EVENT, onRefreshed);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -173,24 +207,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     const bootstrap = async () => {
-      const access = localStorage.getItem('accessToken');
-      const refreshToken = localStorage.getItem('refreshToken');
+      const access = readStoredAccessToken();
+      const storedRefresh = readStoredRefreshToken();
 
-      if (!access && !refreshToken) {
+      if (!access && !storedRefresh) {
         done();
         return;
       }
 
-      const tryRefresh = async () => {
-        if (!refreshToken) {
+      const trySessionRefresh = async () => {
+        if (!readStoredRefreshToken()) {
           return false;
         }
-        const res = await authApi.refresh(refreshToken);
+        const res = await tryRefreshAccessToken();
         if (cancelled) {
           return true;
         }
-        persistFromLoginResponse(res);
-        return true;
+        return res !== null;
       };
 
       try {
@@ -202,7 +235,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setUser(mapUser(me));
           setIsAuthenticated(true);
         } else {
-          const ok = await tryRefresh();
+          const ok = await trySessionRefresh();
           if (!ok) {
             clearAuthState();
           }
@@ -212,7 +245,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return;
         }
         try {
-          const ok = await tryRefresh();
+          const ok = await trySessionRefresh();
           if (!ok) {
             clearAuthState();
           }
@@ -229,7 +262,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [clearAuthState]);
 
   const login = async (email: string, password: string) => {
     const res = await authApi.login({ email, password });
@@ -237,7 +270,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = readStoredRefreshToken();
     if (refreshToken) {
       try {
         await authApi.logout(refreshToken);
@@ -263,43 +296,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Resume section - Amarjot
   const loadResumes = async () => {
-    const data = await apiListResumes(readAccessToken());
+    const data = await apiListResumes(readAccessTokenOrThrow());
     setResumes(data.map(mapResume));
   };
 
   const getResumeById = async (id: number): Promise<Resume> => {
-    const data = await apiGetResume(id, readAccessToken());
+    const data = await apiGetResume(id, readAccessTokenOrThrow());
     return mapResume(data);
   };
 
   const addResume = async (file: File) => {
-    await apiUploadResume(file, readAccessToken());
+    await apiUploadResume(file, readAccessTokenOrThrow());
     await loadResumes();
   };
 
   const deleteResume = async (id: number) => {
-    await apiDeleteResume(id, readAccessToken());
+    await apiDeleteResume(id, readAccessTokenOrThrow());
     setResumes((prev) => prev.filter((resume) => resume.id !== id));
   };
 
   // Job posting section - Eren
   const loadJobPostings = async () => {
-    const data = await apiListJobPostings(readAccessToken());
+    const data = await apiListJobPostings(readAccessTokenOrThrow());
     setJobPostings(data.map(mapJobPosting));
   };
 
   const getJobPostingById = async (id: number): Promise<JobPosting> => {
-    const data = await apiGetJobPosting(id, readAccessToken());
+    const data = await apiGetJobPosting(id, readAccessTokenOrThrow());
     return mapJobPosting(data);
   };
 
   const addJobPosting = async (url: string) => {
-    await apiCreateJobPosting(url, readAccessToken());
+    await apiCreateJobPosting(url, readAccessTokenOrThrow());
     await loadJobPostings();
   };
 
   const deleteJobPosting = async (id: number) => {
-    await apiDeleteJobPosting(id, readAccessToken());
+    await apiDeleteJobPosting(id, readAccessTokenOrThrow());
     setJobPostings((prev: JobPosting[]) => prev.filter((j) => j.id !== id));
   };
 
@@ -338,6 +371,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         sessionReady,
         user,
+        getAccessToken,
         resumes,
         jobPostings,
         optimizationResults,
