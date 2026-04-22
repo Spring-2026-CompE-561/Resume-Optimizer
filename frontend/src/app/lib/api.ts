@@ -2,15 +2,14 @@ import { API_BASE_URL } from './config';
 
 type ApiError = Error & { status?: number };
 
-function buildUrl(path: string) {
+function buildUrl(path: string): string {
   return new URL(path, API_BASE_URL).toString();
 }
 
-function parseResponseBody(text: string) {
+function parseResponseBody(text: string): unknown {
   if (!text) {
     return undefined;
   }
-
   try {
     return JSON.parse(text) as unknown;
   } catch {
@@ -24,15 +23,39 @@ function createError(message: string, status: number): ApiError {
   return error;
 }
 
+function throwHttpError(status: number, data: unknown): never {
+  if (data && typeof data === 'object' && data !== null && 'detail' in data) {
+    const detail = (data as { detail: unknown }).detail;
+    if (typeof detail === 'string') {
+      throw createError(detail, status);
+    }
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0] as { msg?: string } | undefined;
+      if (first && typeof first.msg === 'string') {
+        throw createError(first.msg, status);
+      }
+    }
+  }
+  if (typeof data === 'string' && data) {
+    throw createError(data, status);
+  }
+  throw createError(`Request failed with status ${status}`, status);
+}
+
 export function createAuthHeaders(accessToken: string): HeadersInit {
   return { Authorization: `Bearer ${accessToken}` };
 }
 
-export async function apiRequest(path: string, init: RequestInit = {}) {
+export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   const isFormData = init.body instanceof FormData;
 
-  if (!isFormData && !headers.has('Content-Type')) {
+  if (
+    !isFormData &&
+    init.body !== undefined &&
+    typeof init.body === 'string' &&
+    !headers.has('Content-Type')
+  ) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -45,16 +68,12 @@ export async function apiRequest(path: string, init: RequestInit = {}) {
   const data = parseResponseBody(text);
 
   if (!response.ok) {
-    if (data && typeof data === 'object' && 'detail' in data && typeof data.detail === 'string') {
-      throw createError(data.detail, response.status);
-    }
-
-    if (typeof data === 'string' && data) {
-      throw createError(data, response.status);
-    }
-
-    throw createError(`Request failed with status ${response.status}`, response.status);
+    throwHttpError(response.status, data);
   }
 
-  return data;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return data as T;
 }
