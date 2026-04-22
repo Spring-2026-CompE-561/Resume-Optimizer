@@ -38,6 +38,10 @@ export function ForgotPasswordPage() {
             <p className="text-muted-foreground text-center mb-8">
               Enter your email address and we'll send you a link to reset your password.
             </p>
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              For your security, you will see the same confirmation after you submit, whether or not that
+              email is registered.
+            </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <Input
