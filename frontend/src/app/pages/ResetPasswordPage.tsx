@@ -10,7 +10,10 @@ export function ResetPasswordPage() {
   const navigate = useNavigate();
   const { resetPassword } = useApp();
   const [searchParams] = useSearchParams();
-  const queryToken = searchParams.get('token') ?? '';
+  const queryToken =
+    searchParams.get('token')?.trim() ||
+    searchParams.get('reset_token')?.trim() ||
+    '';
 
   const [manualToken, setManualToken] = useState('');
   const [password, setPassword] = useState('');
@@ -98,8 +101,15 @@ export function ResetPasswordPage() {
                 placeholder="Enter new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
                 required
               />
+              <p className="text-xs text-muted-foreground -mt-2">
+                {queryToken
+                  ? 'Reset token was read from the URL. '
+                  : 'Paste your token above if it is not in the link. '}
+                Password must be at least 8 characters (same as the server).
+              </p>
               <Input
                 label="Confirm Password"
                 type="password"
