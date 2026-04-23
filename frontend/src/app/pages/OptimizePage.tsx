@@ -261,19 +261,23 @@ export function OptimizePage() {
                 {result.optimizedText}
               </div>
             </div>
-
+            
             {/* Suggestions */}
             <div>
               <h3 className="mb-3">Suggestions</h3>
               <div className="space-y-3">
-                {result.suggestions.map((suggestion, idx) => (
-                  <div key={idx} className="flex gap-3 p-4 bg-accent/10 rounded-xl">
-                    <div className="w-6 h-6 bg-accent text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm">
-                      {idx + 1}
+                {result.suggestions.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No suggestions returned.</p>
+                ) : (
+                  result.suggestions.map((suggestion, idx) => (
+                    <div key={idx} className="flex gap-3 p-4 bg-accent/10 rounded-xl">
+                      <div className="w-6 h-6 bg-accent text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm">
+                        {idx + 1}
+                      </div>
+                      <p className="text-foreground">{suggestion}</p>
                     </div>
-                    <p className="text-foreground">{suggestion}</p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
