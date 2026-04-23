@@ -4,11 +4,16 @@ import { PublicNav } from '../components/PublicNav';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { CheckCircle } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const { resetPassword } = useApp();
   const [searchParams] = useSearchParams();
-  const queryToken = searchParams.get('token') ?? '';
+  const queryToken =
+    searchParams.get('token')?.trim() ||
+    searchParams.get('reset_token')?.trim() ||
+    '';
 
   const [manualToken, setManualToken] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +40,7 @@ export function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await resetPassword(token, password);
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
@@ -96,8 +101,15 @@ export function ResetPasswordPage() {
                 placeholder="Enter new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
                 required
               />
+              <p className="text-xs text-muted-foreground -mt-2">
+                {queryToken
+                  ? 'Reset token was read from the URL. '
+                  : 'Paste your token above if it is not in the link. '}
+                Password must be at least 8 characters (same as the server).
+              </p>
               <Input
                 label="Confirm Password"
                 type="password"

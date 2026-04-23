@@ -26,8 +26,13 @@ export function OptimizePage() {
       const optimization = await runOptimization(selectedResumeId, selectedJobId);
       setResult(optimization);
     } catch (err: any) {
-      const message = err?.detail || err?.message || 'Optimization failed. Please try again.';
-      setError(message);
+      if (err?.status === 429) {
+        setError('AI provider rate limit exceeded, please try again later');
+      } else if (err?.detail) {
+        setError(err.detail);
+      } else {
+        setError(err?.message || 'Optimization failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -208,11 +213,12 @@ export function OptimizePage() {
 
         {/* Error State */}
         {error && (
-        <div className="bg-red-50 border border-red-200 rounded-[20px] p-6 text-red-700">
-          <p className="font-medium">Optimization failed</p>
-          <p className="text-sm mt-1">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-[20px] p-6 text-red-700">
+            <p className="font-medium">Optimization failed</p>
+            <p className="text-sm mt-1">{error}</p>
           </div>
         )}
+
         {/* Loading State */}
         {loading && (
           <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
@@ -261,7 +267,7 @@ export function OptimizePage() {
                 {result.optimizedText}
               </div>
             </div>
-            
+
             {/* Suggestions */}
             <div>
               <h3 className="mb-3">Suggestions</h3>

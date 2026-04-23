@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router';
 import { PublicNav } from '../components/PublicNav';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { useApp } from '../context/AppContext';
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const { forgotPassword } = useApp();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +17,8 @@ export function ForgotPasswordPage() {
     setError(null);
     setLoading(true);
     try {
-      navigate('/reset-link-sent');
+      await forgotPassword(email);
+      navigate('/reset-link-sent', { state: { email } });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to send reset link. Please try again.';
       setError(message);
@@ -34,6 +37,10 @@ export function ForgotPasswordPage() {
             <h1 className="text-3xl mb-2 text-center">Reset Your Password</h1>
             <p className="text-muted-foreground text-center mb-8">
               Enter your email address and we'll send you a link to reset your password.
+            </p>
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              For your security, you will see the same confirmation after you submit, whether or not that
+              email is registered.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">

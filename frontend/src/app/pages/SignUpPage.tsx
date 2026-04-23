@@ -23,7 +23,10 @@ export function SignUpPage() {
       await signup(name, email, password);
       navigate('/dashboard');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Signup failed. Please try again.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Signup failed. Please try again.';
       setError(message);
     } finally {
       setLoading(false);
@@ -65,8 +68,12 @@ export function SignUpPage() {
                 placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
                 required
               />
+              <p className="text-xs text-muted-foreground -mt-2">
+                Password must be at least 8 characters (same as the server).
+              </p>
 
               <Button
                 type="submit"
