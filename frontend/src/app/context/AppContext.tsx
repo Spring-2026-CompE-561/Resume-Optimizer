@@ -21,6 +21,7 @@ import {
   type ResumeResponse,
 } from '../services/resumeApi';
 import * as authApi from '../services/authApi';
+import * as optimizeApi from '../services/optimizeApi';
 import {
   AUTH_CLEARED_EVENT,
   AUTH_REFRESH_EVENT,
@@ -57,9 +58,9 @@ export interface JobPosting {
 }
 
 export interface OptimizationResult {
-  id: string;
-  resumeId: string;
-  jobPostingId: string;
+  id: number;
+  resumeId: number | null;
+  jobPostingId: number | null;
   optimizedText: string;
   suggestions: string[];
   timestamp: string;
@@ -87,7 +88,7 @@ interface AppContextType {
   deleteJobPosting: (id: number) => Promise<void>;
   loadJobPostings: () => Promise<void>;
   getJobPostingById: (id: number) => Promise<JobPosting>;
-  runOptimization: (resumeId: string, jobPostingId: string) => Promise<OptimizationResult>;
+  runOptimization: (resumeId: number, jobPostingId: number) => Promise<OptimizationResult>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -336,33 +337,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setJobPostings((prev: JobPosting[]) => prev.filter((j) => j.id !== id));
   };
 
-  // Optimization section - John
-  const runOptimization = async (
-    resumeId: string,
-    jobPostingId: string,
-  ): Promise<OptimizationResult> => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+// Optimization section - John
+const runOptimization = async (resumeId: number, jobPostingId: number): Promise<OptimizationResult> => {
+  const token = readAccessTokenOrThrow();
 
-    const resume = resumes.find((r) => r.id.toString() === resumeId);
-    const job = jobPostings.find((j) => j.id === Number(jobPostingId));
+  const result = await optimizeApi.runOptimization(resumeId, jobPostingId, token);
+  
+  const mapped: OptimizationResult = {
+    id: result.id,
+    resumeId: result.resume_id,
+    jobPostingId: result.job_posting_id,
+    optimizedText: result.optimized_resume_text,
+    suggestions: result.suggestions,
+    timestamp: result.created_at,
+  };
 
-    const result: OptimizationResult = {
-      id: Date.now().toString(),
-      resumeId,
-      jobPostingId,
-      optimizedText: `Optimized version of ${resume?.fileName} for ${job?.title}:\n\n${resume?.parsedText}\n\n[Optimized to highlight: ${job?.keywords.join(', ')}]`,
-      suggestions: [
-        `Emphasize experience with ${job?.keywords[0]} in the summary section`,
-        `Add specific project examples demonstrating ${job?.keywords[1]} skills`,
-        `Quantify achievements related to ${job?.keywords[2]} to show measurable impact`,
-        'Align technical skills section with job requirements',
-        'Tailor the professional summary to match the company culture',
-      ],
-      timestamp: new Date().toISOString(),
-    };
-
-    setOptimizationResults([...optimizationResults, result]);
-    return result;
+    setOptimizationResults((prev) => [...prev, mapped]);
+    return mapped;
   };
 
   return (
