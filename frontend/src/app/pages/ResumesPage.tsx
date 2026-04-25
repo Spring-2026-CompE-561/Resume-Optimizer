@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import { AuthLayout } from '../components/AuthLayout';
 import { useApp } from '../context/AppContext';
@@ -6,12 +6,30 @@ import { Button } from '../components/Button';
 import { FileText, Upload, Trash2 } from 'lucide-react';
 
 export function ResumesPage() {
-  const { resumes, addResume, deleteResume } = useApp();
+  const { resumes, addResume, deleteResume, loadResumes } = useApp();
   const [uploading, setUploading] = useState(false);
-  const [loadingList] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchResumes = async () => {
+      setLoadingList(true);
+      setError(null);
+
+      try {
+        await loadResumes();
+      } catch (error) {
+        console.error('Failed to load resumes:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load resumes.');
+      } finally {
+        setLoadingList(false);
+      }
+    };
+
+    void fetchResumes();
+  }, [loadResumes]);
 
   const handleFileUpload = async (file: File) => {
     setError(null);
@@ -54,7 +72,7 @@ export function ResumesPage() {
     setError(null);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
+      void handleFileUpload(e.dataTransfer.files[0]);
     }
   };
 
@@ -140,7 +158,7 @@ export function ResumesPage() {
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) {
-                handleFileUpload(file);
+                void handleFileUpload(file);
               }
               e.target.value = '';
             }}
@@ -191,7 +209,7 @@ export function ResumesPage() {
                       <Button
                         variant="destructive"
                         className="text-sm px-4 py-2"
-                        onClick={() => handleDelete(resume.id, resume.fileName)}
+                        onClick={() => void handleDelete(resume.id, resume.fileName)}
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
                         Delete
