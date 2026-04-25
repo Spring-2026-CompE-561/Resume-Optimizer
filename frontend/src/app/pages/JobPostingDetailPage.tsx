@@ -3,7 +3,9 @@ import { Link, useParams, useNavigate } from 'react-router';
 import { AuthLayout } from '../components/AuthLayout';
 import { useApp, JobPosting } from '../context/AppContext';
 import { Button } from '../components/Button';
-import { ArrowLeft, Trash2, Sparkles, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Trash2, Sparkles, ExternalLink, Loader2 } from 'lucide-react';
+
+type ApiError = Error & { status?: number };
 
 export function JobPostingDetailPage() {
   const { id } = useParams();
@@ -13,18 +15,25 @@ export function JobPostingDetailPage() {
   const [job, setJob] = useState<JobPosting | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!id) return;
 
     setLoading(true);
     setError(null);
+    setNotFound(false);
 
     getJobPostingById(Number(id))
       .then((data: JobPosting) => setJob(data))
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Failed to load job posting.'),
-      )
+      .catch((err: unknown) => {
+        const status = (err as ApiError)?.status;
+        if (status === 404) {
+          setNotFound(true);
+        } else {
+          setError(err instanceof Error ? err.message : 'Failed to load job posting.');
+        }
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -33,7 +42,26 @@ export function JobPostingDetailPage() {
       <AuthLayout title="Job Posting Details">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
+            <Loader2 className="w-8 h-8 mx-auto mb-3 text-muted-foreground animate-spin" />
             <p className="text-muted-foreground">Loading job posting...</p>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <AuthLayout title="Job Posting Not Found">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
+            <h2 className="text-2xl mb-4">Job Posting Not Found</h2>
+            <p className="text-muted-foreground mb-6">
+              The job posting you're looking for doesn't exist.
+            </p>
+            <Link to="/job-postings">
+              <Button variant="primary">Back to Job Posting Library</Button>
+            </Link>
           </div>
         </div>
       </AuthLayout>
@@ -42,12 +70,12 @@ export function JobPostingDetailPage() {
 
   if (error || !job) {
     return (
-      <AuthLayout title="Job Posting Not Found">
+      <AuthLayout title="Job Posting Details">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
-            <h2 className="text-2xl mb-4">Job Posting Not Found</h2>
+            <h2 className="text-2xl mb-4">Could not load job posting</h2>
             <p className="text-muted-foreground mb-6">
-              {error || "The job posting you're looking for doesn't exist."}
+              {error || 'The job posting could not be loaded.'}
             </p>
             <Link to="/job-postings">
               <Button variant="primary">Back to Job Posting Library</Button>
