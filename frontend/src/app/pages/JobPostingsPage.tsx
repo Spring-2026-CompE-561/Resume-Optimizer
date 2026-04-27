@@ -4,7 +4,7 @@ import { AuthLayout } from '../components/AuthLayout';
 import { useApp } from '../context/AppContext';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { Briefcase, Link as LinkIcon, Trash2 } from 'lucide-react';
+import { Briefcase, Link as LinkIcon, Trash2, Loader2, AlertCircle } from 'lucide-react';
 
 export function JobPostingsPage() {
   const { jobPostings, addJobPosting, deleteJobPosting, loadJobPostings } = useApp();
@@ -12,13 +12,14 @@ export function JobPostingsPage() {
   const [loading, setLoading] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoadingList(true);
-    setError(null);
+    setListError(null);
     loadJobPostings()
       .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Failed to load job postings.'),
+        setListError(err instanceof Error ? err.message : 'Failed to load job postings.'),
       )
       .finally(() => setLoadingList(false));
   }, []);
@@ -92,7 +93,14 @@ export function JobPostingsPage() {
         {/* Job Postings List */}
         {loadingList ? (
           <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
+            <Loader2 className="w-8 h-8 mx-auto mb-3 text-muted-foreground animate-spin" />
             <p className="text-muted-foreground">Loading job postings...</p>
+          </div>
+        ) : listError ? (
+          <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
+            <h3 className="text-xl mb-2">Could not load job postings</h3>
+            <p className="text-muted-foreground">{listError}</p>
           </div>
         ) : jobPostings.length === 0 ? (
           <div className="bg-white rounded-[20px] p-12 shadow-md text-center">
