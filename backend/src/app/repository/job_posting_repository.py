@@ -11,7 +11,7 @@ class JobPostingRepository:
     def create(
         db: Session,
         owner_id: int,
-        source_url: str,
+        source_url: str | None,
         content_hash: str,
         title: str | None,
         company: str | None,

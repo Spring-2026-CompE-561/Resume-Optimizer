@@ -6,6 +6,8 @@ from src.app.core.settings import settings
 
 engine = create_engine(
     settings.database_url,
+    echo=settings.database_echo,
+    pool_pre_ping=True,
     connect_args=(
         {"check_same_thread": False}
         if settings.database_url.startswith("sqlite")

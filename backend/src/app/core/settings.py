@@ -19,14 +19,20 @@ class Settings(BaseSettings):
     )
     app_version: str = "0.1.0"
     debug: bool = False
-    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ]
     docs_url: str = "/docs"
     redoc_url: str = "/redoc"
     openapi_url: str = "/openapi.json"
     log_level: str = "INFO"
 
     # Database
-    database_url: str = "sqlite:///./resume_optimizer.db"
+    database_url: str = "postgresql+psycopg://resume:resume@localhost:5432/resume_optimizer"
+    database_echo: bool = False
 
     # Security
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
@@ -39,6 +45,14 @@ class Settings(BaseSettings):
 
     # Optimization
     optimize_ai_mode: str = "local"
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-5.5"
+    openai_timeout_seconds: int = 60
+    openai_reasoning_effort: str = "low"
+
+    # Storage
+    storage_root: str = "storage"
+    pdf_author: str = "Resume Optimizer"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -67,6 +81,11 @@ class Settings(BaseSettings):
                 return False
         return value
 
+    @field_validator("database_echo", mode="before")
+    @classmethod
+    def parse_database_echo(cls, value: bool | str) -> bool | str:
+        return cls.parse_debug(value)
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: str) -> str:
@@ -80,10 +99,21 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_optimize_ai_mode(cls, value: str) -> str:
         normalized = value.strip().lower()
-        valid_modes = {"local", "rate_limit", "fail"}
+        valid_modes = {"local", "openai", "rate_limit", "fail"}
         if normalized not in valid_modes:
             raise ValueError(
                 f"Invalid optimize AI mode: {value}. Expected one of {sorted(valid_modes)}"
+            )
+        return normalized
+
+    @field_validator("openai_reasoning_effort", mode="before")
+    @classmethod
+    def normalize_reasoning_effort(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        valid_efforts = {"minimal", "low", "medium", "high"}
+        if normalized not in valid_efforts:
+            raise ValueError(
+                f"Invalid OpenAI reasoning effort: {value}. Expected one of {sorted(valid_efforts)}"
             )
         return normalized
 
