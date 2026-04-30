@@ -1,3 +1,6 @@
+/**
+ * Shared fetch wrapper for the backend API (Remington baseline + 401 refresh retry).
+ */
 import {
   isAuthExemptPath,
   readStoredAccessToken,
