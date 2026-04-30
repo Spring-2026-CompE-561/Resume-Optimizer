@@ -57,6 +57,26 @@ def test_create_rejects_invalid_url(client: TestClient):
     assert resp.status_code == 422
 
 
+def test_create_manual_job_description_without_scrape(client: TestClient):
+    token = _register_and_login(client, "manual-job@example.com")
+    resp = client.post(
+        "/api/v1/job-postings",
+        json={
+            "title": "Platform Engineer",
+            "company": "Acme",
+            "description": "Build Python services, maintain PostgreSQL infrastructure, and improve API reliability.",
+        },
+        headers=_auth(token),
+    )
+
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["title"] == "Platform Engineer"
+    assert data["company"] == "Acme"
+    assert data["source_url"] is None
+    assert "python" in [keyword["term"] for keyword in data["keywords"]]
+
+
 # ── LIST ──────────────────────────────────────────────────────────────────────
 
 @patch("src.app.routes.job_postings.scrape_service.scrape_job_posting", return_value=MOCK_SCRAPED)

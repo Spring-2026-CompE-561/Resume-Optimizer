@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 
+from src.app.core.settings import settings
 from src.app.exceptions.resume_exceptions import (
     file_too_large_exception,
     file_type_unsupported_exception,
@@ -36,7 +37,7 @@ class ResumeUploadService:
         file_extension = file.filename.split(".")[-1]
         unique_name = f"{uuid4()}.{file_extension}"
 
-        upload_dir = "storage/uploads"
+        upload_dir = os.path.join(settings.storage_root, "uploads")
         os.makedirs(upload_dir, exist_ok=True)
 
         file_path = os.path.join(upload_dir, unique_name)
