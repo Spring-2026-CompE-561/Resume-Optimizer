@@ -1,3 +1,4 @@
+import hashlib
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -19,17 +20,37 @@ def create_job_posting(
     user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> JobPostingOut:
-    url = str(data.source_url)
-    scraped = scrape_service.scrape_job_posting(url)
+    url = str(data.source_url) if data.source_url else None
+
+    if data.description:
+        description = data.description.strip()
+        title = data.title.strip() if data.title else "Custom Job Description"
+        company = data.company.strip() if data.company else None
+        content_hash = hashlib.sha256(
+            "::".join(
+                [
+                    url or "",
+                    title or "",
+                    company or "",
+                    description,
+                ]
+            ).encode("utf-8")
+        ).hexdigest()
+    else:
+        scraped = scrape_service.scrape_job_posting(url or "")
+        description = scraped["description"]
+        title = scraped["title"]
+        company = scraped["company"]
+        content_hash = scraped["content_hash"]
 
     job_posting = JobPostingRepository.create(
         db,
         owner_id=user.id,
         source_url=url,
-        content_hash=scraped["content_hash"],
-        title=scraped["title"],
-        company=scraped["company"],
-        description=scraped["description"],
+        content_hash=content_hash,
+        title=title,
+        company=company,
+        description=description,
     )
 
     if job_posting.description:
