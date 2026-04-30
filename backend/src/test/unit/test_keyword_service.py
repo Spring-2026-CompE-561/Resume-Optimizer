@@ -1,32 +1,8 @@
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from src.app.core.database import Base
-from src.app.models import job_posting, job_posting_skill, keyword  # noqa: F401 - register tables
 from src.app.repository.job_posting_repository import JobPostingRepository
 from src.app.services.keyword_service import extract_and_persist_keywords
-
-SQLITE_TEST_URL = "sqlite:///:memory:"
-
-
-@pytest.fixture
-def db_session():
-    engine = create_engine(
-        SQLITE_TEST_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    Base.metadata.create_all(bind=engine)
-    Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    session = Session()
-    try:
-        yield session
-    finally:
-        session.close()
-        Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
@@ -52,7 +28,6 @@ def test_keyword_extraction_is_deterministic(db_session, job_posting_record):
 
     terms = [kw.term for kw in job_posting_record.keywords]
 
-    # Running again on a second posting should produce same terms
     posting2 = JobPostingRepository.create(
         db_session,
         owner_id=1,
@@ -70,14 +45,11 @@ def test_keyword_extraction_is_deterministic(db_session, job_posting_record):
 
 
 def test_keyword_extraction_top_terms_are_most_frequent(db_session, job_posting_record):
-    description = (
-        "python python python python fastapi fastapi sql docker aws rest"
-    )
+    description = "python python python python fastapi fastapi sql docker aws rest"
     extract_and_persist_keywords(db_session, job_posting_record.id, description)
     db_session.refresh(job_posting_record)
 
     terms = [kw.term for kw in job_posting_record.keywords]
-    # python appears most — should be present
     assert "python" in terms
 
 

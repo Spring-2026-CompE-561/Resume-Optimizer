@@ -1,8 +1,5 @@
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from src.app.core.auth import (
     create_access_token,
@@ -10,31 +7,11 @@ from src.app.core.auth import (
     verify_password,
     verify_token,
 )
-from src.app.core.database import Base
 from src.app.models import password_reset_token  # noqa: F401
 from src.app.models import refresh_token  # noqa: F401
 from src.app.models import user  # noqa: F401
 from src.app.schemas.auth import LoginRequest, SignupRequest
 from src.app.services import auth_service
-
-SQLITE_TEST_URL = "sqlite:///:memory:"
-
-
-@pytest.fixture
-def db_session():
-    engine = create_engine(
-        SQLITE_TEST_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    Base.metadata.create_all(bind=engine)
-    Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    session = Session()
-    try:
-        yield session
-    finally:
-        session.close()
-        Base.metadata.drop_all(bind=engine)
 
 
 def test_password_hash_verify_pass(db_session):
