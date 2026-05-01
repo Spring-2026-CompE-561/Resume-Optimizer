@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 32 100% 98%;
+  --foreground: 218 39% 11%;
+  --card: 0 0% 100%;
+  --muted: 30 36% 94%;
+  --muted-foreground: 218 15% 38%;
+  --border: 24 28% 84%;
+  --ring: 18 83% 49%;
+  --primary: 18 83% 49%;
+  --primary-foreground: 30 100% 99%;
+  --accent: 45 100% 66%;
+  --accent-foreground: 218 39% 11%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(255, 178, 96, 0.42), transparent 34%),
+    radial-gradient(circle at top right, rgba(239, 104, 60, 0.24), transparent 28%),
+    linear-gradient(180deg, rgba(255, 250, 244, 1) 0%, rgba(255, 246, 236, 1) 44%, rgba(255, 252, 248, 1) 100%);
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(239, 104, 60, 0.22);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
