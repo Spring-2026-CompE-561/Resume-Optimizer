@@ -31,6 +31,11 @@ function buildUrl(path: string) {
   return new URL(path, API_BASE_URL.endsWith("/") ? API_BASE_URL : `${API_BASE_URL}/`).toString();
 }
 
+export function buildApiUrl(path: string) {
+  const normalized = path.startsWith("/") ? path.slice(1) : path;
+  return buildUrl(normalized);
+}
+
 async function parseResponse(response: Response) {
   const text = await response.text();
   if (!text) {
@@ -162,4 +167,46 @@ export async function fetchJobPostings() {
 
 export async function fetchOptimizations() {
   return apiRequest<OptimizationRunRecord[]>("optimize");
+}
+
+export async function uploadResume(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return apiRequest<ResumeRecord>("resumes", {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export async function createJobPosting(input: {
+  source_url?: string;
+  title?: string;
+  company?: string;
+  description?: string;
+}) {
+  return apiRequest<JobPostingRecord>("job-postings", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function runOptimization(input: {
+  resume_id: number;
+  job_posting_id: number;
+  customization_notes?: string;
+}) {
+  return apiRequest<OptimizationRunRecord>("optimize", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function regenerateOptimization(
+  optimizationRunId: number,
+  input: { customization_notes?: string },
+) {
+  return apiRequest<OptimizationRunRecord>(`optimize/${optimizationRunId}/regenerate`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
