@@ -2,6 +2,10 @@
 __pycache__/
 *.db
 .vscode/
+frontend/.next/
+frontend/node_modules/
+frontend/coverage/
+frontend/.turbo/
 backend/resume_optimizer.db
 backend/storage/uploads/*
 backend/storage/parsed/*
