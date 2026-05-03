@@ -32,8 +32,10 @@ function buildUrl(path: string) {
 }
 
 export function buildApiUrl(path: string) {
-  const normalized = path.startsWith("/") ? path.slice(1) : path;
-  return buildUrl(normalized);
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+  return buildUrl(path);
 }
 
 async function parseResponse(response: Response) {
