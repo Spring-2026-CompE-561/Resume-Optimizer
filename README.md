@@ -1,3 +1,46 @@
 # Resume Optimizer
 
-The website lets users upload their resume and a link to a job posting. It then reads the job posting and scrapes the page for important keywords. Lastly, it uses AI to adjust the resume so it better matches the job description.
+Resume Optimizer is a full-stack system for tailoring resumes to job descriptions.
+
+## Stack
+
+- Frontend: Next.js 16.2.4, Tailwind CSS, ShadCN-style UI primitives
+- Backend: FastAPI with `uv`
+- Database: PostgreSQL via `docker compose`
+
+## Core Flow
+
+1. Upload a PDF or DOCX resume.
+2. Parse it into plaintext.
+3. Save or scrape a target job description.
+4. Generate an optimized resume draft.
+5. Store the generated LaTeX and PDF artifacts.
+6. Review the LaTeX in the browser and download the PDF.
+
+## Local Development
+
+1. Start PostgreSQL:
+
+   ```bash
+   docker compose up -d postgres
+   ```
+
+2. Start the backend:
+
+   ```bash
+   cd backend
+   cp .env.example .env
+   uv sync
+   uv run uvicorn src.app.main:app --reload
+   ```
+
+3. Start the frontend:
+
+   ```bash
+   cd frontend
+   cp .env.example .env.local
+   npm install
+   npm run dev
+   ```
+
+See `instructions.md` for the patch-based handoff flow, testing commands, and validation steps.
