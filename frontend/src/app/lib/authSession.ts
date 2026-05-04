@@ -1,3 +1,7 @@
+/**
+ * Browser-only helpers for access/refresh tokens and refresh coordination.
+ * Dispatches window events so AppContext can stay in sync with apiRequest retries.
+ */
 import { API_BASE_URL } from './config';
 
 const REFRESH_PATH = '/api/v1/auth/refresh';
