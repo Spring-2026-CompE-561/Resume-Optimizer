@@ -1,3 +1,6 @@
+/**
+ * Wraps routes that require a logged-in user. Waits for session bootstrap before redirecting.
+ */
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useApp } from '../context/AppContext';
