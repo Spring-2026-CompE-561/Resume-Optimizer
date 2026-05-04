@@ -1,3 +1,5 @@
+"""Pre-built HTTPException instances for auth routes (raise these directly)."""
+
 from fastapi import HTTPException, status
 
 invalid_credentials_exception = HTTPException(
