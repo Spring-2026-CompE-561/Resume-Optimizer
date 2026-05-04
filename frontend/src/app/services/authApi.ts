@@ -1,3 +1,4 @@
+/** Typed calls to `/api/v1/auth/*` (Alden). */
 import { apiRequest } from '../lib/api';
 
 const AUTH = '/api/v1/auth';
