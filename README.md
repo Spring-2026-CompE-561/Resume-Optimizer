@@ -19,17 +19,20 @@ Resume Optimizer is a full-stack system for tailoring resumes to job description
 
 ## Local Development
 
-1. Start PostgreSQL:
+1. Start the full stack with Docker:
+
+   ```bash
+   docker compose up
+   ```
+
+   The app will be available at `http://localhost:3000`, the API at `http://localhost:8000`,
+   and PostgreSQL at `localhost:5432`.
+
+2. Run the services manually instead:
 
    ```bash
    docker compose up -d postgres
-   ```
-
-2. Start the backend:
-
-   ```bash
    cd backend
-   cp .env.example .env
    uv sync
    uv run uvicorn src.app.main:app --reload
    ```
@@ -38,7 +41,6 @@ Resume Optimizer is a full-stack system for tailoring resumes to job description
 
    ```bash
    cd frontend
-   cp .env.example .env.local
    npm install
    npm run dev
    ```
