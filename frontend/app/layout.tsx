@@ -28,7 +28,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={`${fontSans.variable} ${fontMono.variable}`}>
         <Providers>{children}</Providers>
       </body>

@@ -609,10 +609,17 @@ function Field({
   onChange: (value: string) => void;
   placeholder?: string;
 }) {
+  const fieldId = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      <Label htmlFor={fieldId}>{label}</Label>
+      <Input
+        id={fieldId}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+      />
     </div>
   );
 }
