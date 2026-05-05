@@ -1,23 +1,37 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
-  --background: 32 100% 98%;
-  --foreground: 218 39% 11%;
-  --card: 0 0% 100%;
-  --muted: 30 36% 94%;
-  --muted-foreground: 218 15% 38%;
-  --border: 24 28% 84%;
-  --ring: 18 83% 49%;
-  --primary: 18 83% 49%;
-  --primary-foreground: 30 100% 99%;
-  --accent: 45 100% 66%;
-  --accent-foreground: 218 39% 11%;
+  --background: hsl(32 100% 98%);
+  --foreground: hsl(218 39% 11%);
+  --card: hsl(0 0% 100%);
+  --muted: hsl(30 36% 94%);
+  --muted-foreground: hsl(218 15% 38%);
+  --border: hsl(24 28% 84%);
+  --ring: hsl(18 83% 49%);
+  --primary: hsl(18 83% 49%);
+  --primary-foreground: hsl(30 100% 99%);
+  --accent: hsl(45 100% 66%);
+  --accent-foreground: hsl(218 39% 11%);
 }
 
-* {
-  box-sizing: border-box;
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --shadow-spotlight: 0 25px 70px rgba(9, 17, 29, 0.15);
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
 }
 
 html {
@@ -31,8 +45,13 @@ body {
     radial-gradient(circle at top left, rgba(255, 178, 96, 0.42), transparent 34%),
     radial-gradient(circle at top right, rgba(239, 104, 60, 0.24), transparent 28%),
     linear-gradient(180deg, rgba(255, 250, 244, 1) 0%, rgba(255, 246, 236, 1) 44%, rgba(255, 252, 248, 1) 100%);
-  color: hsl(var(--foreground));
+  color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
 }
 
 a {
@@ -60,12 +79,4 @@ a {
   to {
     height: 0;
   }
-}
-
-.animate-accordion-down {
-  animation: accordion-down 0.2s ease-out;
-}
-
-.animate-accordion-up {
-  animation: accordion-up 0.2s ease-out;
 }
