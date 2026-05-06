@@ -37,6 +37,21 @@ test("browser login, management pages, workflow, and history all work", async ({
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByText("Playwright User")).toBeVisible();
   await expect(page.getByText("Welcome back, Playwright")).toBeVisible();
+  await page.getByRole("button", { name: "Collapse sidebar" }).click();
+  await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
+  await page.getByRole("button", { name: "Expand sidebar" }).click();
+  await expect(page.getByRole("button", { name: "Collapse sidebar" })).toBeVisible();
+
+  await page.goto("/dashboard/settings");
+  await expect(page).toHaveURL(/\/dashboard\/settings$/);
+  await page.getByRole("switch", { name: "Dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("switch", { name: "Dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
   await page.goto("/dashboard/resumes");
   await expect(page).toHaveURL(/\/dashboard\/resumes$/);

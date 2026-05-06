@@ -78,7 +78,7 @@ export function DashboardJobDetailPage({ jobId }: { jobId: number }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+      <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-sm font-medium text-muted-foreground">Loading role...</span>
       </div>
@@ -155,7 +155,7 @@ export function DashboardJobDetailPage({ jobId }: { jobId: number }) {
               icon={<ExternalLink className="h-4 w-4" />}
             />
           ) : null}
-          <div className="rounded-[28px] border border-border bg-[#fbfcff] p-6">
+          <div className="rounded-[28px] border border-border bg-input p-6">
             <div className="mb-4 flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
                 <Target className="h-5 w-5" />

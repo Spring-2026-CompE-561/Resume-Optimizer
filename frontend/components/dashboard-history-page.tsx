@@ -144,12 +144,12 @@ export function DashboardHistoryPage() {
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder="Search optimization runs..."
-              className="h-12 rounded-2xl bg-white pl-11"
+              className="h-12 rounded-2xl bg-input pl-11"
             />
           </div>
 
           {isLoading ? (
-            <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+            <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <span className="text-sm font-medium text-muted-foreground">Loading history...</span>
             </div>
@@ -167,10 +167,10 @@ export function DashboardHistoryPage() {
                       key={optimization.id}
                       type="button"
                       onClick={() => setActiveOptimizationId(optimization.id)}
-                      className={`w-full rounded-[32px] border bg-white p-6 text-left shadow-[0_18px_50px_rgba(20,37,84,0.06)] transition ${
+                      className={`w-full rounded-[32px] border bg-card p-6 text-left shadow-[0_18px_50px_var(--soft-shadow)] transition ${
                         active
                           ? "border-[rgba(92,124,255,0.6)] ring-2 ring-[rgba(92,124,255,0.12)]"
-                          : "border-white hover:-translate-y-0.5"
+                          : "border-border hover:-translate-y-0.5"
                       }`}
                     >
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -199,7 +199,7 @@ export function DashboardHistoryPage() {
                   );
                 })
               ) : (
-                <Card className="rounded-[32px] border-dashed border-[rgba(133,153,214,0.35)] bg-white/70 p-6">
+                <Card className="rounded-[32px] border-dashed border-border bg-card-elevated p-6">
                   <p className="text-base font-medium tracking-[-0.03em] text-muted-foreground">
                     {deferredQuery.trim()
                       ? "No optimization runs match that search."

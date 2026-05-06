@@ -95,7 +95,7 @@ export function DashboardWorkflowPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+      <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-sm font-medium text-muted-foreground">Loading workflow...</span>
       </div>
@@ -187,7 +187,7 @@ export function DashboardWorkflowPage() {
                 value={customizationNotes}
                 onChange={(event) => setCustomizationNotes(event.target.value.slice(0, 500))}
                 placeholder="Add any additional context or specific areas to focus on..."
-                className="min-h-[136px] rounded-[24px] bg-[#fbfcff]"
+                className="min-h-[136px] rounded-[24px] bg-input"
               />
               <p className="text-right text-sm text-muted-foreground">{customizationNotes.length}/500</p>
             </div>

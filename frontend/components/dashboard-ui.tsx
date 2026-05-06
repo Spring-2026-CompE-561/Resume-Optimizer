@@ -94,7 +94,7 @@ export function SelectorField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
-        className="flex h-11 w-full rounded-2xl border border-border bg-white/90 px-4 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-11 w-full rounded-2xl border border-border bg-input px-4 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {options.length === 0 ? <option value="">{emptyLabel}</option> : null}
         {options.map((option) => (

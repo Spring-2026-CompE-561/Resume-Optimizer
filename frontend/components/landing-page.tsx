@@ -61,10 +61,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          <Card
-            className="relative overflow-hidden rounded-[36px] border-white bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-8 lg:p-9"
-            id="features"
-          >
+          <Card className="relative overflow-hidden rounded-[36px] bg-card p-8 lg:p-9" id="features">
             <div className="absolute inset-x-16 top-0 h-28 rounded-full bg-[rgba(47,99,255,0.12)] blur-3xl" />
             <div className="relative space-y-6">
               <div className="flex items-center justify-between gap-4">
@@ -86,7 +83,7 @@ export function LandingPage() {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-[rgba(176,190,235,0.45)] bg-white p-7">
+              <div className="rounded-[28px] border border-border bg-card p-7">
                 <div className="space-y-6">
                   <div className="border-b border-border pb-5">
                     <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
@@ -103,9 +100,9 @@ export function LandingPage() {
                       Professional Summary
                     </p>
                     <div className="space-y-3">
-                      <div className="h-2.5 w-[92%] rounded-full bg-[#dbe2f2]" />
-                      <div className="h-2.5 w-[82%] rounded-full bg-[#dbe2f2]" />
-                      <div className="h-2.5 w-[56%] rounded-full bg-[#dbe2f2]" />
+                      <div className="h-2.5 w-[92%] rounded-full bg-muted" />
+                      <div className="h-2.5 w-[82%] rounded-full bg-muted" />
+                      <div className="h-2.5 w-[56%] rounded-full bg-muted" />
                     </div>
                   </div>
 
@@ -118,7 +115,7 @@ export function LandingPage() {
                         <div className="flex items-center gap-3" key={`${width}-${index}`}>
                           <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                           <div
-                            className="h-2.5 rounded-full bg-[#dbe2f2]"
+                            className="h-2.5 rounded-full bg-muted"
                             style={{ width: `${width}%` }}
                           />
                         </div>

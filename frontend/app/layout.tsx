@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Manrope } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { Providers } from "@/components/providers";
+import { THEME_STORAGE_KEY } from "@/lib/ui-preferences";
 
 import "./globals.css";
 
@@ -28,8 +29,24 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const themeScript = `
+    (() => {
+      try {
+        const storedTheme = window.localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
+        const theme = storedTheme === "dark" ? "dark" : "light";
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  `;
+
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className={`${fontSans.variable} ${fontMono.variable}`}>
         <Providers>{children}</Providers>
       </body>

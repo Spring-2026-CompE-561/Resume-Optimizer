@@ -57,7 +57,7 @@ export function IconCircle({
   return (
     <div
       className={cn(
-        "flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(180deg,#f7f9ff_0%,#f0f4ff_100%)] text-primary",
+        "flex h-16 w-16 items-center justify-center rounded-full bg-accent text-primary",
         className,
       )}
     >
@@ -115,7 +115,7 @@ export function EmptyPanel({
   actionLabel?: string;
 }) {
   return (
-    <Card className="border-dashed border-[rgba(133,153,214,0.35)] bg-white/70 text-center">
+    <Card className="border-dashed border-border bg-card-elevated text-center">
       <div className="space-y-3 py-3">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent text-primary">
           <FileText className="h-5 w-5" />
@@ -156,7 +156,7 @@ export function PaginationControls({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-[24px] border border-white bg-white px-4 py-3 shadow-[0_14px_36px_rgba(20,37,84,0.06)] sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-[24px] border border-border bg-card px-4 py-3 shadow-[0_14px_36px_var(--soft-shadow)] sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm font-medium text-muted-foreground">
         Showing {startItem}-{endItem} of {pagination.total}
       </p>
@@ -204,35 +204,35 @@ export function PreviewResumeCard({
   const hasContent = preview.sections.some((section) => section.lines.length > 0);
 
   return (
-    <div className="rounded-[24px] border border-[rgba(176,190,235,0.45)] bg-[linear-gradient(180deg,#edf2fb_0%,#f7f9ff_100%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] sm:p-6">
+    <div className="rounded-[24px] border border-border bg-[var(--resume-shell)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] sm:p-6">
       <div
         className={cn(
-          "mx-auto min-h-[660px] max-w-[760px] rounded-md bg-white px-8 py-10 text-[#1d2738] shadow-[0_24px_70px_rgba(20,37,84,0.16)] sm:px-12",
+          "mx-auto min-h-[660px] max-w-[760px] rounded-md bg-[var(--resume-paper)] px-8 py-10 text-[var(--resume-ink)] shadow-[0_24px_70px_var(--card-shadow)] sm:px-12",
           compact && "min-h-[520px] px-7 py-8 sm:px-9",
         )}
       >
         <div className="space-y-7">
-          <div className="border-b border-[#d8deea] pb-5">
+          <div className="border-b border-[var(--resume-rule)] pb-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 space-y-1.5">
                 <h3
                   className={cn(
-                    "break-words font-serif text-4xl font-semibold leading-tight text-[#102542]",
+                    "break-words font-serif text-4xl font-semibold leading-tight text-[var(--resume-heading)]",
                     compact && "text-3xl",
                   )}
                 >
                   {preview.name}
                 </h3>
                 {preview.headline ? (
-                  <p className="text-base font-semibold uppercase text-[#44516a]">
+                  <p className="text-base font-semibold uppercase text-[var(--resume-muted)]">
                     {preview.headline}
                   </p>
                 ) : null}
-                <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-[#667085]">
+                <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-[var(--resume-muted)]">
                   {preview.contact.length > 0 ? (
                     preview.contact.map((item, index) => (
                       <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
-                        {index > 0 ? <span className="h-1 w-1 rounded-full bg-[#9aa4b8]" /> : null}
+                        {index > 0 ? <span className="h-1 w-1 rounded-full bg-[var(--resume-muted)]" /> : null}
                         {item}
                       </span>
                     ))
@@ -255,7 +255,7 @@ export function PreviewResumeCard({
               ))}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-[#c7d0e3] bg-[#f8faff] px-4 py-6 text-sm font-medium text-[#667085]">
+            <div className="rounded-lg border border-dashed border-[var(--resume-rule)] bg-[var(--resume-empty)] px-4 py-6 text-sm font-medium text-[var(--resume-muted)]">
               This draft does not have previewable resume text yet.
             </div>
           )}
@@ -388,7 +388,7 @@ function PreviewSection({ section }: { section: ResumePreviewSection }) {
 
   return (
     <div className="space-y-3">
-      <p className="border-b border-[#e1e6f0] pb-1 text-sm font-bold uppercase text-[#b23a48]">
+      <p className="border-b border-[var(--resume-rule)] pb-1 text-sm font-bold uppercase text-[var(--resume-accent)]">
         {section.title}
       </p>
       {isSkills ? (
@@ -396,7 +396,7 @@ function PreviewSection({ section }: { section: ResumePreviewSection }) {
           {skillItems.map((skill) => (
             <span
               key={skill}
-              className="rounded-full bg-[#eef3ff] px-2.5 py-1 text-xs font-semibold text-[#344a8a]"
+              className="rounded-full bg-[var(--resume-chip)] px-2.5 py-1 text-xs font-semibold text-[var(--resume-chip-text)]"
             >
               {skill}
             </span>
@@ -406,7 +406,7 @@ function PreviewSection({ section }: { section: ResumePreviewSection }) {
         <ul className="space-y-2">
           {section.lines.slice(0, 8).map((line, index) => (
             <li key={`${section.title}-${line}-${index}`} className="flex gap-3 text-sm leading-6">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#2f63ff]" />
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
               <span>{line}</span>
             </li>
           ))}

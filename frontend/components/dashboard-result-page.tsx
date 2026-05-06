@@ -197,7 +197,7 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+      <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-sm font-medium text-muted-foreground">Loading result...</span>
       </div>

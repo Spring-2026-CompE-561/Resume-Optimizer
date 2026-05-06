@@ -74,7 +74,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   return (
     <main className="min-h-screen px-6 py-6 lg:px-8 lg:py-8">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[1380px] flex-col rounded-[36px] border border-white/80 bg-white/50 p-6 shadow-[0_30px_80px_rgba(20,37,84,0.08)] backdrop-blur-sm lg:p-8">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[1380px] flex-col rounded-[36px] border border-border bg-card-elevated p-6 shadow-[0_30px_80px_var(--card-shadow)] backdrop-blur-sm lg:p-8">
         <header className="flex items-center justify-between gap-4">
           <AppLogo href="/" />
           <Link
@@ -87,14 +87,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
         <div className="flex flex-1 items-center justify-center py-8 lg:py-12">
           <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-[minmax(0,540px)_minmax(280px,360px)] lg:items-center">
-            <Card className="rounded-[36px] border-white bg-white p-8 lg:p-10">
+            <Card className="rounded-[36px] p-8 lg:p-10">
               <div className="space-y-8">
                 <div className="inline-flex rounded-2xl bg-accent p-1.5">
                   <Link
                     href="/auth?mode=signin"
                     className={`rounded-[14px] px-5 py-3 text-sm font-medium tracking-[-0.03em] transition ${
                       mode === "signin"
-                        ? "bg-white text-foreground shadow-[0_10px_24px_rgba(16,37,84,0.08)]"
+                        ? "bg-card text-foreground shadow-[0_10px_24px_var(--soft-shadow)]"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -104,7 +104,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                     href="/auth?mode=signup"
                     className={`rounded-[14px] px-5 py-3 text-sm font-medium tracking-[-0.03em] transition ${
                       mode === "signup"
-                        ? "bg-white text-foreground shadow-[0_10px_24px_rgba(16,37,84,0.08)]"
+                        ? "bg-card text-foreground shadow-[0_10px_24px_var(--soft-shadow)]"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -131,7 +131,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                           onChange={(event) => setName(event.target.value)}
                           placeholder="Your name"
                           autoComplete="name"
-                          className="h-14 rounded-2xl border-border bg-[#fbfcff] pl-11"
+                          className="h-14 rounded-2xl border-border bg-input pl-11"
                         />
                       </div>
                     </div>
@@ -149,7 +149,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder="jordan.lee@example.com"
                         required
-                        className="h-14 rounded-2xl border-border bg-[#fbfcff] pl-11"
+                        className="h-14 rounded-2xl border-border bg-input pl-11"
                       />
                     </div>
                   </div>
@@ -166,7 +166,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder="Enter your password"
                         required
-                        className="h-14 rounded-2xl border-border bg-[#fbfcff] pl-11"
+                        className="h-14 rounded-2xl border-border bg-input pl-11"
                       />
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 </div>
               </Card>
 
-              <Card className="rounded-[32px] bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] p-8">
+              <Card className="rounded-[32px] bg-card p-8">
                 <div className="space-y-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
                     What you can expect

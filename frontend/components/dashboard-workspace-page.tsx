@@ -112,7 +112,7 @@ export function DashboardWorkspacePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+      <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-sm font-medium text-muted-foreground">Loading workspace...</span>
       </div>
@@ -173,7 +173,7 @@ export function DashboardWorkspacePage() {
           icon={<Sparkles className="h-5 w-5" />}
           subtitle={
             latestOptimization
-              ? `${latestOptimization.target_company || "Target company"} • ${formatDate(latestOptimization.created_at)}`
+              ? `${latestOptimization.target_company || "Target company"} - ${formatDate(latestOptimization.created_at)}`
               : "Your latest generated resume will appear here."
           }
           title="Latest Draft"
