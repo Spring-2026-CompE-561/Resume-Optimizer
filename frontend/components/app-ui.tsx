@@ -204,64 +204,39 @@ export function PreviewResumeCard({
 }) {
   const preview = parseResumePreview(content, title, subtitle);
   const hasContent = preview.sections.some((section) => section.lines.length > 0);
+  const pages = hasContent ? paginateResumePreview(preview, compact) : [];
 
   return (
     <div className="rounded-[24px] border border-border bg-[var(--resume-shell)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] sm:p-6">
-      <div
-        className={cn(
-          "mx-auto min-h-[660px] max-w-[760px] rounded-md bg-[var(--resume-paper)] px-8 py-10 text-[var(--resume-ink)] shadow-[0_24px_70px_var(--card-shadow)] sm:px-12",
-          compact && "min-h-[520px] px-7 py-8 sm:px-9",
-        )}
-      >
-        <div className="space-y-7">
-          <div className="border-b border-[var(--resume-rule)] pb-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 space-y-1.5">
-                <h3
-                  className={cn(
-                    "break-words font-serif text-4xl font-semibold leading-tight text-[var(--resume-heading)]",
-                    compact && "text-3xl",
-                  )}
-                >
-                  {preview.name}
-                </h3>
-                {preview.headline ? (
-                  <p className="text-base font-semibold uppercase text-[var(--resume-muted)]">
-                    {preview.headline}
-                  </p>
-                ) : null}
-                <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-[var(--resume-muted)]">
-                  {preview.contact.length > 0 ? (
-                    preview.contact.map((item, index) => (
-                      <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
-                        {index > 0 ? <span className="h-1 w-1 rounded-full bg-[var(--resume-muted)]" /> : null}
-                        {item}
-                      </span>
-                    ))
-                  ) : (
-                    <span>Contact details available in uploaded resume</span>
-                  )}
-                </div>
-              </div>
-
-              {typeof score === "number" ? (
-                <StatusPill tone="success">ATS Score {score}</StatusPill>
-              ) : null}
-            </div>
-          </div>
-
-          {hasContent ? (
-            <div className="space-y-6">
-              {preview.sections.map((section, index) => (
-                <PreviewSection key={`${section.title}-${index}`} section={section} />
-              ))}
-            </div>
-          ) : (
+      <div className="mx-auto flex max-w-[760px] flex-col gap-5">
+        {hasContent ? (
+          pages.map((page, pageIndex) => (
+            <PreviewResumePage
+              key={`resume-preview-page-${pageIndex}`}
+              compact={compact}
+              pageNumber={pageIndex + 1}
+              preview={preview}
+              score={pageIndex === 0 ? score : undefined}
+              sections={page.sections}
+              showHeader={pageIndex === 0}
+              totalPages={pages.length}
+            />
+          ))
+        ) : (
+          <PreviewResumePage
+            compact={compact}
+            pageNumber={1}
+            preview={preview}
+            score={score}
+            sections={[]}
+            showHeader
+            totalPages={1}
+          >
             <div className="rounded-lg border border-dashed border-[var(--resume-rule)] bg-[var(--resume-empty)] px-4 py-6 text-sm font-medium text-[var(--resume-muted)]">
               This draft does not have previewable resume text yet.
             </div>
-          )}
-        </div>
+          </PreviewResumePage>
+        )}
       </div>
     </div>
   );
@@ -276,6 +251,10 @@ type ResumePreview = {
   contact: string[];
   headline: string;
   name: string;
+  sections: ResumePreviewSection[];
+};
+
+type ResumePreviewPage = {
   sections: ResumePreviewSection[];
 };
 
@@ -382,6 +361,100 @@ function cleanPreviewLine(line: string) {
   return line.replace(/^[-*\u2022]\s+/, "").replace(/\s+/g, " ").trim();
 }
 
+function PreviewResumePage({
+  children,
+  compact,
+  pageNumber,
+  preview,
+  score,
+  sections,
+  showHeader,
+  totalPages,
+}: {
+  children?: ReactNode;
+  compact: boolean;
+  pageNumber: number;
+  preview: ResumePreview;
+  score?: number;
+  sections: ResumePreviewSection[];
+  showHeader: boolean;
+  totalPages: number;
+}) {
+  return (
+    <div
+      aria-label={`Resume preview page ${pageNumber} of ${totalPages}`}
+      className={cn(
+        "relative aspect-[210/297] overflow-hidden rounded-md bg-[var(--resume-paper)] px-8 py-10 text-[var(--resume-ink)] shadow-[0_24px_70px_var(--card-shadow)] sm:px-12",
+        compact && "px-7 py-8 sm:px-9",
+      )}
+    >
+      <div className="flex h-full flex-col">
+        <div className="min-h-0 flex-1 space-y-7 overflow-hidden">
+          {showHeader ? <PreviewHeader compact={compact} preview={preview} score={score} /> : null}
+
+          {children ?? (
+            <div className="space-y-6">
+              {sections.map((section, index) => (
+                <PreviewSection key={`${section.title}-${pageNumber}-${index}`} section={section} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 border-t border-[var(--resume-rule)] pt-2 text-right text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--resume-muted)]">
+          Page {pageNumber} of {totalPages}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewHeader({
+  compact,
+  preview,
+  score,
+}: {
+  compact: boolean;
+  preview: ResumePreview;
+  score?: number;
+}) {
+  return (
+    <div className="border-b border-[var(--resume-rule)] pb-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1.5">
+          <h3
+            className={cn(
+              "break-words font-serif text-4xl font-semibold leading-tight text-[var(--resume-heading)]",
+              compact && "text-3xl",
+            )}
+          >
+            {preview.name}
+          </h3>
+          {preview.headline ? (
+            <p className="text-base font-semibold uppercase text-[var(--resume-muted)]">
+              {preview.headline}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-[var(--resume-muted)]">
+            {preview.contact.length > 0 ? (
+              preview.contact.map((item, index) => (
+                <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
+                  {index > 0 ? <span className="h-1 w-1 rounded-full bg-[var(--resume-muted)]" /> : null}
+                  {item}
+                </span>
+              ))
+            ) : (
+              <span>Contact details available in uploaded resume</span>
+            )}
+          </div>
+        </div>
+
+        {typeof score === "number" ? <StatusPill tone="success">ATS Score {score}</StatusPill> : null}
+      </div>
+    </div>
+  );
+}
+
 function PreviewSection({ section }: { section: ResumePreviewSection }) {
   const isSkills = section.title.toLowerCase() === "skills";
   const skillItems = isSkills
@@ -416,6 +489,80 @@ function PreviewSection({ section }: { section: ResumePreviewSection }) {
       )}
     </div>
   );
+}
+
+function paginateResumePreview(preview: ResumePreview, compact: boolean): ResumePreviewPage[] {
+  const firstPageCapacity = compact ? 26 : 30;
+  const continuationPageCapacity = compact ? 34 : 40;
+  const pages: ResumePreviewPage[] = [{ sections: [] }];
+  let remainingUnits = firstPageCapacity;
+
+  function addPage() {
+    pages.push({ sections: [] });
+    remainingUnits = continuationPageCapacity;
+  }
+
+  for (const section of preview.sections) {
+    const lines = getPaginatedSectionLines(section);
+    let cursor = 0;
+
+    while (cursor < lines.length) {
+      const currentPage = pages[pages.length - 1];
+      const pageCapacity = pages.length === 1 ? firstPageCapacity : continuationPageCapacity;
+      let sectionLines: string[] = [];
+      let sectionUnits = 2;
+
+      while (cursor < lines.length) {
+        const lineUnits = estimatePreviewLineUnits(lines[cursor], section.title, compact);
+
+        if (sectionUnits + lineUnits > remainingUnits && sectionLines.length > 0) {
+          break;
+        }
+
+        if (sectionUnits + lineUnits > remainingUnits && remainingUnits < pageCapacity) {
+          break;
+        }
+
+        sectionLines.push(lines[cursor]);
+        sectionUnits += lineUnits;
+        cursor += 1;
+      }
+
+      if (sectionLines.length === 0) {
+        addPage();
+        continue;
+      }
+
+      currentPage.sections.push({ title: section.title, lines: sectionLines });
+      remainingUnits -= sectionUnits;
+
+      if (cursor < lines.length) {
+        addPage();
+      }
+    }
+  }
+
+  return pages.filter((page) => page.sections.length > 0);
+}
+
+function getPaginatedSectionLines(section: ResumePreviewSection) {
+  if (section.title.toLowerCase() !== "skills") {
+    return section.lines;
+  }
+
+  return section.lines
+    .flatMap((line) => line.split(","))
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function estimatePreviewLineUnits(line: string, sectionTitle: string, compact: boolean) {
+  if (sectionTitle.toLowerCase() === "skills") {
+    return 1;
+  }
+
+  const maxCharactersPerLine = compact ? 58 : 72;
+  return Math.max(1, Math.ceil(line.length / maxCharactersPerLine));
 }
 
 export function DetailRow({
