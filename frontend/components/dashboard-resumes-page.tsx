@@ -133,7 +133,7 @@ export function DashboardResumesPage() {
 
       <Card className="rounded-[32px] border-dashed border-[rgba(133,153,214,0.4)] p-8">
         <form className="space-y-6" onSubmit={handleUpload}>
-          <div className="flex flex-col items-center justify-center gap-4 rounded-[28px] bg-[#fbfcff] px-6 py-12 text-center">
+          <div className="flex flex-col items-center justify-center gap-4 rounded-[28px] bg-input px-6 py-12 text-center">
             <IconCircle>
               <UploadCloud className="h-6 w-6" />
             </IconCircle>
@@ -155,7 +155,7 @@ export function DashboardResumesPage() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <label
                 htmlFor="resume-upload-input"
-                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-2xl bg-accent px-5 text-sm font-medium text-primary transition hover:bg-[#ecf2ff]"
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-2xl bg-accent px-5 text-sm font-medium text-primary transition hover:bg-muted"
               >
                 Choose file
               </label>
@@ -181,7 +181,7 @@ export function DashboardResumesPage() {
         <h2 className="text-3xl font-semibold tracking-[-0.06em] text-foreground">Your resumes</h2>
 
         {isLoading ? (
-          <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+          <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
             <span className="text-sm font-medium text-muted-foreground">Loading resumes...</span>
           </div>

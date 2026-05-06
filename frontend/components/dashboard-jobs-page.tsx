@@ -172,7 +172,7 @@ export function DashboardJobsPage() {
               onClick={() => setEntryMode("manual")}
               className={`rounded-[14px] px-5 py-3 text-sm font-medium tracking-[-0.03em] transition ${
                 entryMode === "manual"
-                  ? "bg-white text-foreground shadow-[0_10px_24px_rgba(16,37,84,0.08)]"
+                  ? "bg-card text-foreground shadow-[0_10px_24px_var(--soft-shadow)]"
                   : "text-muted-foreground"
               }`}
             >
@@ -183,7 +183,7 @@ export function DashboardJobsPage() {
               onClick={() => setEntryMode("url")}
               className={`rounded-[14px] px-5 py-3 text-sm font-medium tracking-[-0.03em] transition ${
                 entryMode === "url"
-                  ? "bg-white text-foreground shadow-[0_10px_24px_rgba(16,37,84,0.08)]"
+                  ? "bg-card text-foreground shadow-[0_10px_24px_var(--soft-shadow)]"
                   : "text-muted-foreground"
               }`}
             >
@@ -204,7 +204,7 @@ export function DashboardJobsPage() {
                         setManualForm((current) => ({ ...current, title: event.target.value }))
                       }
                       placeholder="Senior Product Manager"
-                      className="h-12 rounded-2xl bg-[#fbfcff]"
+                      className="h-12 rounded-2xl bg-input"
                     />
                   </div>
                   <div className="space-y-2.5">
@@ -216,7 +216,7 @@ export function DashboardJobsPage() {
                         setManualForm((current) => ({ ...current, company: event.target.value }))
                       }
                       placeholder="NovaTech"
-                      className="h-12 rounded-2xl bg-[#fbfcff]"
+                      className="h-12 rounded-2xl bg-input"
                     />
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export function DashboardJobsPage() {
                       setManualForm((current) => ({ ...current, description: event.target.value }))
                     }
                     placeholder="Paste the job description here..."
-                    className="min-h-[220px] rounded-[24px] bg-[#fbfcff]"
+                    className="min-h-[220px] rounded-[24px] bg-input"
                   />
                 </div>
               </>
@@ -245,7 +245,7 @@ export function DashboardJobsPage() {
                       setUrlForm((current) => ({ ...current, title: event.target.value }))
                     }
                     placeholder="Senior Product Manager"
-                    className="h-12 rounded-2xl bg-[#fbfcff]"
+                    className="h-12 rounded-2xl bg-input"
                   />
                 </div>
                 <div className="space-y-2.5">
@@ -258,7 +258,7 @@ export function DashboardJobsPage() {
                       setUrlForm((current) => ({ ...current, source_url: event.target.value }))
                     }
                     placeholder="https://company.com/careers/role"
-                    className="h-12 rounded-2xl bg-[#fbfcff]"
+                    className="h-12 rounded-2xl bg-input"
                   />
                 </div>
               </div>
@@ -282,7 +282,7 @@ export function DashboardJobsPage() {
         <h2 className="text-3xl font-semibold tracking-[-0.06em] text-foreground">Saved roles</h2>
 
         {isLoading ? (
-          <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+          <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
             <span className="text-sm font-medium text-muted-foreground">Loading roles...</span>
           </div>
@@ -303,7 +303,7 @@ export function DashboardJobsPage() {
                         {job.title || "Untitled role"}
                       </Link>
                       <p className="text-sm text-muted-foreground">
-                        {job.company || "Saved role"} • Added {formatDate(job.created_at)}
+                        {job.company || "Saved role"} - Added {formatDate(job.created_at)}
                       </p>
                     </div>
                   </div>

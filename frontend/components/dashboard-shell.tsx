@@ -10,6 +10,8 @@ import {
   LayoutGrid,
   Loader2,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings,
   Target,
 } from "lucide-react";
@@ -26,6 +28,10 @@ import {
 import { clearDashboardCache, loadCurrentUser } from "@/lib/dashboard-cache";
 import { logout } from "@/lib/api";
 import type { AuthUser } from "@/lib/types";
+import {
+  readSidebarCollapsedPreference,
+  writeSidebarCollapsedPreference,
+} from "@/lib/ui-preferences";
 import { getDisplayName, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +76,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const syncUser = useEffectEvent(async () => {
@@ -79,6 +86,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
+    setSidebarCollapsed(readSidebarCollapsedPreference());
+
     if (!readAccessToken()) {
       router.replace("/auth?mode=signin");
       return;
@@ -123,10 +132,18 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     });
   }
 
+  function handleToggleSidebar() {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      writeSidebarCollapsedPreference(next);
+      return next;
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_60px_rgba(20,37,84,0.1)]">
+        <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_60px_var(--card-shadow)]">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
           <span className="text-sm font-medium tracking-[-0.03em] text-muted-foreground">
             Loading your workspace...
@@ -141,11 +158,56 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <main className="min-h-screen">
-      <div className="grid min-h-screen lg:grid-cols-[268px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-white/80 bg-white/50 px-5 py-8 backdrop-blur-sm lg:flex lg:flex-col">
-          <AppLogo href="/dashboard" className="px-2" />
+      <div
+        className={cn(
+          "grid min-h-screen transition-[grid-template-columns] duration-200",
+          sidebarCollapsed
+            ? "lg:grid-cols-[92px_minmax(0,1fr)]"
+            : "lg:grid-cols-[268px_minmax(0,1fr)]",
+        )}
+      >
+        <aside
+          className={cn(
+            "hidden border-r border-border bg-[var(--sidebar-surface)] py-8 backdrop-blur-sm lg:flex lg:flex-col",
+            sidebarCollapsed ? "items-center px-3" : "px-5",
+          )}
+        >
+          <div className={cn("flex w-full items-center", sidebarCollapsed ? "justify-center" : "justify-between")}>
+            <AppLogo
+              href="/dashboard"
+              className={cn(!sidebarCollapsed && "px-2")}
+              showText={!sidebarCollapsed}
+            />
+            {!sidebarCollapsed ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                onClick={handleToggleSidebar}
+                className="h-10 w-10 px-0"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
 
-          <nav className="mt-12 space-y-2">
+          {sidebarCollapsed ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+              onClick={handleToggleSidebar}
+              className="mt-6 h-10 w-10 px-0"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </Button>
+          ) : null}
+
+          <nav aria-label="Primary" className={cn("space-y-2", sidebarCollapsed ? "mt-6" : "mt-12")}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = item.isActive(pathname);
@@ -154,15 +216,26 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-label={sidebarCollapsed ? item.label : undefined}
+                  title={sidebarCollapsed ? item.label : undefined}
                   className={cn(
-                    "flex items-center gap-4 rounded-[18px] px-5 py-4 text-lg font-medium tracking-[-0.04em] transition",
+                    "group relative flex items-center gap-4 rounded-[18px] text-lg font-medium tracking-[-0.04em] transition",
+                    sidebarCollapsed ? "h-12 w-12 justify-center px-0 py-0" : "px-5 py-4",
                     active
                       ? "bg-accent text-primary"
-                      : "text-foreground hover:bg-white hover:shadow-[0_12px_30px_rgba(20,37,84,0.06)]",
+                      : "text-foreground hover:bg-card hover:shadow-[0_12px_30px_var(--soft-shadow)]",
                   )}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className={cn(sidebarCollapsed && "sr-only")}>{item.label}</span>
+                  {sidebarCollapsed ? (
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-full top-1/2 z-30 ml-3 -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground opacity-0 shadow-[0_14px_34px_var(--card-shadow)] transition group-hover:opacity-100 group-focus-visible:opacity-100"
+                    >
+                      {item.label}
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}
@@ -170,7 +243,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-20 border-b border-white/80 bg-background/88 backdrop-blur-xl">
+          <header className="sticky top-0 z-20 border-b border-border bg-[var(--header-surface)] backdrop-blur-xl">
             <div className="flex min-h-[92px] items-center justify-between gap-6 px-6 lg:px-10">
               <div className="lg:hidden">
                 <AppLogo href="/dashboard" />
@@ -197,7 +270,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            <div className="overflow-x-auto border-t border-white/60 px-6 py-3 lg:hidden">
+            <div className="overflow-x-auto border-t border-border px-6 py-3 lg:hidden">
               <div className="flex min-w-max gap-2">
                 {navItems.map((item) => {
                   const Icon = item.icon;
@@ -209,7 +282,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                       href={item.href}
                       className={cn(
                         "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium tracking-[-0.03em] transition",
-                        active ? "bg-accent text-primary" : "bg-white text-foreground",
+                        active ? "bg-accent text-primary" : "bg-card text-foreground",
                       )}
                     >
                       <Icon className="h-4 w-4" />

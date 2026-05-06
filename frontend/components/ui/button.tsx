@@ -12,13 +12,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[linear-gradient(135deg,#2f63ff_0%,#2457ff_100%)] text-primary-foreground shadow-[0_18px_40px_rgba(47,99,255,0.24)] hover:-translate-y-0.5 hover:brightness-[1.03]",
+          "bg-[var(--primary-gradient)] text-primary-foreground shadow-[0_18px_40px_var(--primary-shadow)] hover:-translate-y-0.5 hover:brightness-[1.03]",
         secondary:
-          "border border-border bg-white text-foreground shadow-[0_12px_30px_rgba(20,37,84,0.06)] hover:-translate-y-0.5 hover:border-[#d7def4] hover:bg-white",
+          "border border-border bg-card text-foreground shadow-[0_12px_30px_var(--soft-shadow)] hover:-translate-y-0.5 hover:border-primary/25 hover:bg-muted",
         ghost: "text-foreground hover:bg-foreground/5",
-        soft: "bg-accent text-accent-foreground hover:bg-[#ecf2ff]",
+        soft: "bg-accent text-accent-foreground hover:bg-muted",
         destructive:
-          "border border-[rgba(255,93,84,0.45)] bg-white text-[var(--color-danger)] shadow-[0_12px_30px_rgba(20,37,84,0.05)] hover:bg-[rgba(255,93,84,0.05)]",
+          "border border-danger/40 bg-card text-danger shadow-[0_12px_30px_var(--soft-shadow)] hover:bg-danger/10",
       },
       size: {
         default: "h-11 px-5",

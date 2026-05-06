@@ -78,7 +78,7 @@ export function DashboardResumeDetailPage({ resumeId }: { resumeId: number }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
+      <div className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-[0_20px_50px_var(--soft-shadow)]">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-sm font-medium text-muted-foreground">Loading resume...</span>
       </div>
@@ -147,7 +147,7 @@ export function DashboardResumeDetailPage({ resumeId }: { resumeId: number }) {
             <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
               Resume Preview
             </h2>
-            <div className="rounded-[28px] border border-border bg-[#fbfcff] p-6">
+            <div className="rounded-[28px] border border-border bg-input p-6">
               <pre className="max-h-[640px] overflow-auto whitespace-pre-wrap text-sm leading-8 tracking-[-0.01em] text-foreground/88">
                 {resume.parsed_text || "A text preview is not available for this resume yet."}
               </pre>

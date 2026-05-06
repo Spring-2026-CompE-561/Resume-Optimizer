@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function SiteNavbar() {
   return (
-    <header className="sticky top-0 z-30 border-b border-white/80 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-border bg-[var(--header-surface)] backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-6 px-6 py-5 lg:px-8">
         <AppLogo href="/" />
 
