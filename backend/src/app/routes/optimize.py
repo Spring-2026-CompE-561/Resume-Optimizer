@@ -57,6 +57,19 @@ def get_optimization_run(
     )
 
 
+@api_router.delete("/{optimization_run_id}", status_code=204)
+def delete_optimization_run(
+    optimization_run_id: int,
+    user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> None:
+    optimize_service.delete_run_for_user(
+        db=db,
+        user=user,
+        optimization_run_id=optimization_run_id,
+    )
+
+
 @api_router.post("/{optimization_run_id}/regenerate", response_model=OptimizationRunOut, status_code=201)
 def regenerate_optimization(
     optimization_run_id: int,

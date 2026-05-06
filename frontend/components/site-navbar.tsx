@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppLogo } from "@/components/app-logo";
+import { LandingThemeToggle } from "@/components/landing-theme-toggle";
 import { Button } from "@/components/ui/button";
 
 export function SiteNavbar() {
@@ -19,6 +20,7 @@ export function SiteNavbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <LandingThemeToggle />
           <Button asChild variant="secondary" size="sm">
             <Link href="/auth?mode=signup">Create account</Link>
           </Button>

@@ -263,7 +263,12 @@ export function DashboardJobsPage() {
               </div>
             )}
 
-            <Button size="lg" type="submit" disabled={isPending}>
+            <Button
+              className="bg-primary font-semibold text-primary-foreground shadow-[0_18px_40px_var(--primary-shadow)] hover:bg-primary hover:brightness-95 disabled:border disabled:border-border disabled:bg-card disabled:text-foreground disabled:opacity-100 disabled:shadow-none"
+              size="lg"
+              type="submit"
+              disabled={isPending}
+            >
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

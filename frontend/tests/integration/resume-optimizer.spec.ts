@@ -28,6 +28,12 @@ test("browser login, management pages, workflow, and history all work", async ({
 
   expect(registerResponse.ok()).toBeTruthy();
 
+  await page.goto("/");
+  await page.getByRole("switch", { name: "Dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("switch", { name: "Dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
   await page.goto("/login");
   await expect(page).toHaveURL(/\/auth\?mode=signin$/);
   await page.getByLabel("Email").fill(email);
@@ -37,7 +43,6 @@ test("browser login, management pages, workflow, and history all work", async ({
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByText("Playwright User")).toBeVisible();
   await expect(page.getByText("Welcome back, Playwright")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Generate tailored draft" })).toBeVisible();
   await page.getByRole("button", { name: "Collapse sidebar" }).click();
   await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
   await page.reload();
@@ -57,8 +62,8 @@ test("browser login, management pages, workflow, and history all work", async ({
   await page.goto("/dashboard/resumes");
   await expect(page).toHaveURL(/\/dashboard\/resumes$/);
   await page.locator("#resume-upload-input").setInputFiles(sampleResumePath);
-  await page.locator("form").locator('button[type="submit"]').click();
   await expect(page.getByText("Resume uploaded.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Upload resume" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: /sample_resume\.pdf/i })).toBeVisible();
 
   await page.getByRole("button", { name: "Select" }).first().click();
@@ -79,8 +84,25 @@ test("browser login, management pages, workflow, and history all work", async ({
   await page.getByRole("button", { name: "Select" }).first().click();
   await expect(page.getByText("Role selected for optimization.")).toBeVisible();
 
-  await page.goto("/dashboard/workflow");
-  await expect(page).toHaveURL(/\/dashboard\/workflow$/);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByText("Your Progress")).toHaveCount(0);
+  await page.getByRole("button", { name: "Change selected resume" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("button", { name: /sample_resume\.pdf/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Add new resume" })).toHaveAttribute(
+    "href",
+    "/dashboard/resumes",
+  );
+  await page.getByRole("button", { name: /sample_resume\.pdf/i }).click();
+  await page.getByRole("button", { name: "Change selected role" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("button", { name: /Backend Engineer/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Add new role" })).toHaveAttribute(
+    "href",
+    "/dashboard/jobs",
+  );
+  await page.getByRole("button", { name: /Backend Engineer/ }).click();
   await page
     .getByPlaceholder("Add any additional context or specific areas to focus on...")
     .fill("Prioritize backend API delivery, measurable outcomes, and PostgreSQL work.");
@@ -89,6 +111,7 @@ test("browser login, management pages, workflow, and history all work", async ({
   await expect(page).toHaveURL(/\/dashboard\/results\/\d+$/);
   await expect(page.getByRole("heading", { name: "Optimization Result" })).toBeVisible();
   await expect(page.getByText("Targeted Resume Draft")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Optimization Summary" })).toHaveCount(0);
   await page.getByRole("button", { name: "Apply suggestion" }).first().click();
   await expect(page.getByRole("button", { name: "Applied" }).first()).toBeVisible();
   await expect(page.getByText("Applied Improvements")).toBeVisible();
@@ -101,14 +124,31 @@ test("browser login, management pages, workflow, and history all work", async ({
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^optimized-resume-\d+\.pdf$/);
 
+  await page.goto("/dashboard");
+  await page.getByRole("button", { name: "Generate optimized draft" }).click();
+  await expect(page.getByText("Draft already generated")).toBeVisible();
+  await page.getByRole("button", { name: "View draft" }).click();
+  await expect(page).toHaveURL(/\/dashboard\/results\/\d+$/);
+
   await page.goto("/dashboard/history");
   await expect(page).toHaveURL(/\/dashboard\/history$/);
   await expect(page.getByRole("heading", { name: "Optimization History" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Backend Engineer Acme/ }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Optimized Resume Preview" })).toBeVisible();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Delete" }).click();
+  const deleteToast = page.getByText("Optimization draft deleted.");
+  await expect(deleteToast).toBeVisible();
+  await expect(deleteToast).toBeHidden({ timeout: 7000 });
 
   await page.getByRole("button", { name: "Logout" }).click();
   await expect(page).toHaveURL(/\/auth\?mode=signin$/);
 
   await page.goto("/signup");
   await expect(page).toHaveURL(/\/auth\?mode=signup$/);
+  await page.getByLabel("Full name").fill("Enter Submit");
+  await page.getByLabel("Email").fill(`signup-${Date.now()}@example.com`);
+  await page.getByLabel("Password").fill(password);
+  await page.getByLabel("Password").press("Enter");
+  await expect(page).toHaveURL(/\/dashboard$/);
 });

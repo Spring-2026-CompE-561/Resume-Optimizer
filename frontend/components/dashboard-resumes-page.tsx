@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { ChangeEvent, DragEvent } from "react";
 import { useEffect, useEffectEvent, useState, useTransition } from "react";
 import Link from "next/link";
 import { FileText, Loader2, Trash2, UploadCloud } from "lucide-react";
@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { deleteResume, fetchResumesPage, uploadResume } from "@/lib/api";
 import { invalidateDashboardResource, loadResumes } from "@/lib/dashboard-cache";
 import type { PaginationMeta, ResumeRecord } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import {
   readSelectedResumeId,
   writeSelectedResumeId,
@@ -23,7 +24,8 @@ export function DashboardResumesPage() {
   const [resumes, setResumes] = useState<ResumeRecord[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [page, setPage] = useState(1);
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploadingFileName, setUploadingFileName] = useState<string | null>(null);
+  const [isDraggingResume, setIsDraggingResume] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -59,17 +61,20 @@ export function DashboardResumesPage() {
     };
   }, [page]);
 
-  function handleUpload(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!resumeFile) {
+  function uploadSelectedResume(file: File | null) {
+    if (!file) {
       toast.error("Choose a PDF or DOCX file first.");
       return;
     }
 
+    if (uploadingFileName) {
+      return;
+    }
+
+    setUploadingFileName(file.name);
     startTransition(async () => {
       try {
-        const uploadedResume = await uploadResume(resumeFile);
+        const uploadedResume = await uploadResume(file);
         invalidateDashboardResource("resumes");
         if (page === 1) {
           await refreshResumes(1);
@@ -77,17 +82,28 @@ export function DashboardResumesPage() {
           setPage(1);
         }
         writeSelectedResumeId(uploadedResume.id);
-        setResumeFile(null);
-        const input = document.getElementById("resume-upload-input") as HTMLInputElement | null;
-        if (input) {
-          input.value = "";
-        }
         toast.success("Resume uploaded.");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Upload failed.";
         toast.error(message);
+      } finally {
+        setUploadingFileName(null);
+        const input = document.getElementById("resume-upload-input") as HTMLInputElement | null;
+        if (input) {
+          input.value = "";
+        }
       }
     });
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    uploadSelectedResume(event.target.files?.[0] ?? null);
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    setIsDraggingResume(false);
+    uploadSelectedResume(event.dataTransfer.files?.[0] ?? null);
   }
 
   function handleDelete(resumeId: number) {
@@ -131,49 +147,54 @@ export function DashboardResumesPage() {
       </div>
 
       <Card className="rounded-[32px] border-dashed border-[rgba(133,153,214,0.4)] p-8">
-        <form className="space-y-6" onSubmit={handleUpload}>
-          <div className="flex flex-col items-center justify-center gap-4 rounded-[28px] bg-input px-6 py-12 text-center">
-            <IconCircle>
+        <label
+          htmlFor="resume-upload-input"
+          onDragEnter={(event) => {
+            event.preventDefault();
+            setIsDraggingResume(true);
+          }}
+          onDragOver={(event) => event.preventDefault()}
+          onDragLeave={() => setIsDraggingResume(false)}
+          onDrop={handleDrop}
+          className={cn(
+            "flex cursor-pointer flex-col items-center justify-center gap-4 rounded-[28px] border border-dashed border-transparent bg-input px-6 py-12 text-center transition",
+            isDraggingResume && "border-primary bg-accent",
+            uploadingFileName && "cursor-wait",
+          )}
+        >
+          <IconCircle>
+            {uploadingFileName ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
               <UploadCloud className="h-6 w-6" />
-            </IconCircle>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
-                Upload a new resume
-              </h2>
-              <p className="text-base tracking-[-0.03em] text-muted-foreground">
-                PDF and DOCX files are supported.
-              </p>
-            </div>
-            <input
-              id="resume-upload-input"
-              type="file"
-              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={(event) => setResumeFile(event.target.files?.[0] ?? null)}
-              className="sr-only"
-            />
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <label
-                htmlFor="resume-upload-input"
-                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-2xl bg-accent px-5 text-sm font-medium text-primary transition hover:bg-muted"
-              >
-                Choose file
-              </label>
-              <span className="text-sm text-muted-foreground">
-                {resumeFile?.name || "No file chosen"}
-              </span>
-            </div>
-            <Button size="lg" type="submit" disabled={isPending || !resumeFile}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                "Upload resume"
-              )}
-            </Button>
+            )}
+          </IconCircle>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
+              Upload a new resume
+            </h2>
+            <p className="text-base tracking-[-0.03em] text-muted-foreground">
+              PDF and DOCX files upload automatically when selected or dropped here.
+            </p>
           </div>
-        </form>
+          <input
+            id="resume-upload-input"
+            type="file"
+            aria-label="Choose resume file"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={handleFileChange}
+            disabled={Boolean(uploadingFileName)}
+            className="sr-only"
+          />
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span className="inline-flex h-11 items-center justify-center rounded-2xl bg-accent px-5 text-sm font-medium text-primary transition">
+              Choose file
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {uploadingFileName ? `Uploading ${uploadingFileName}...` : "No file chosen"}
+            </span>
+          </div>
+        </label>
       </Card>
 
       <div className="space-y-4">

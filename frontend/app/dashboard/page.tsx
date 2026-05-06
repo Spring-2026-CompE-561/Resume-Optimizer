@@ -1,5 +1,5 @@
-import { DashboardWorkspacePage } from "@/components/dashboard-workspace-page";
+import { DashboardWorkflowPage } from "@/components/dashboard-workflow-page";
 
 export default function DashboardPage() {
-  return <DashboardWorkspacePage />;
+  return <DashboardWorkflowPage />;
 }
