@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EmptyPanel, Eyebrow, formatDate, PaginationControls } from "@/components/app-ui";
+import { EmptyPanel, formatDate, PaginationControls } from "@/components/app-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -153,7 +153,6 @@ export function DashboardJobsPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <Eyebrow>Role Management</Eyebrow>
         <div className="space-y-3">
           <h1 className="text-5xl font-semibold tracking-[-0.07em] text-foreground">
             Role Management

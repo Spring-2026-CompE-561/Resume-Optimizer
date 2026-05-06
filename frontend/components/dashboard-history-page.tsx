@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import {
   DownloadButton,
-  Eyebrow,
   PaginationControls,
   PreviewResumeCard,
   StatusPill,
@@ -125,7 +124,6 @@ export function DashboardHistoryPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <Eyebrow>Workspace</Eyebrow>
         <div className="space-y-3">
           <h1 className="text-5xl font-semibold tracking-[-0.07em] text-foreground">
             Optimization History
@@ -136,9 +134,9 @@ export function DashboardHistoryPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
+      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-5">
-          <div className="relative max-w-lg">
+          <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchQuery}
@@ -167,29 +165,29 @@ export function DashboardHistoryPage() {
                       key={optimization.id}
                       type="button"
                       onClick={() => setActiveOptimizationId(optimization.id)}
-                      className={`w-full rounded-[32px] border bg-card p-6 text-left shadow-[0_18px_50px_var(--soft-shadow)] transition ${
+                      className={`w-full rounded-[24px] border bg-card p-4 text-left shadow-[0_12px_34px_var(--soft-shadow)] transition ${
                         active
                           ? "border-[rgba(92,124,255,0.6)] ring-2 ring-[rgba(92,124,255,0.12)]"
                           : "border-border hover:-translate-y-0.5"
                       }`}
                     >
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex items-start gap-4">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-primary">
-                            <Target className="h-5 w-5" />
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+                            <Target className="h-4 w-4" />
                           </div>
-                          <div className="space-y-2">
-                            <p className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
+                          <div className="min-w-0 space-y-1">
+                            <p className="truncate text-lg font-semibold tracking-[-0.04em] text-foreground">
                               {optimization.target_job_title || "Optimized draft"}
                             </p>
-                            <p className="text-base tracking-[-0.03em] text-muted-foreground">
+                            <p className="truncate text-sm tracking-[-0.02em] text-muted-foreground">
                               {optimization.target_company || "Target company"}
                             </p>
-                            <p className="text-sm text-muted-foreground">{resumeName}</p>
+                            <p className="truncate text-xs text-muted-foreground">{resumeName}</p>
                           </div>
                         </div>
-                        <div className="space-y-3 lg:text-right">
-                          <p className="text-lg font-medium tracking-[-0.03em] text-muted-foreground">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium tracking-[-0.02em] text-muted-foreground">
                             {formatDate(optimization.created_at)}
                           </p>
                           <StatusPill>Completed</StatusPill>
@@ -214,7 +212,7 @@ export function DashboardHistoryPage() {
           )}
         </div>
 
-        <Card className="h-fit rounded-[32px] p-6 lg:sticky lg:top-28">
+        <Card className="h-fit rounded-[32px] p-6 lg:sticky lg:top-28 xl:p-8">
           {activeOptimization ? (
             <div className="space-y-6">
               <div className="space-y-3">
@@ -235,7 +233,7 @@ export function DashboardHistoryPage() {
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <DetailMetric
                   icon={<BriefcaseBusiness className="h-4 w-4" />}
                   label="Title"
@@ -273,7 +271,6 @@ export function DashboardHistoryPage() {
                   content={activeOptimization.optimized_resume_text}
                   title={activeResume?.file_name || "Optimized Resume"}
                   subtitle={activeOptimization.target_job_title || "Optimized draft"}
-                  compact
                 />
               </div>
 

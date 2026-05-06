@@ -2,7 +2,7 @@
 
 import { Mail, Moon, ShieldCheck, Sun, UserRound } from "lucide-react";
 
-import { DetailRow, Eyebrow } from "@/components/app-ui";
+import { DetailRow } from "@/components/app-ui";
 import { Card } from "@/components/ui/card";
 import { useTheme } from "@/components/theme-provider";
 import { readStoredUser } from "@/lib/auth-storage";
@@ -15,7 +15,6 @@ export function DashboardSettingsPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <Eyebrow>Settings</Eyebrow>
         <div className="space-y-3">
           <h1 className="text-5xl font-semibold tracking-[-0.07em] text-foreground">Settings</h1>
           <p className="text-lg tracking-[-0.03em] text-muted-foreground">

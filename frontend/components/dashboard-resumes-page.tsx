@@ -6,7 +6,7 @@ import Link from "next/link";
 import { FileText, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
-import { EmptyPanel, Eyebrow, formatDate, IconCircle, PaginationControls } from "@/components/app-ui";
+import { EmptyPanel, formatDate, IconCircle, PaginationControls } from "@/components/app-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { deleteResume, fetchResumesPage, uploadResume } from "@/lib/api";
@@ -120,7 +120,6 @@ export function DashboardResumesPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <Eyebrow>Resume Management</Eyebrow>
         <div className="space-y-3">
           <h1 className="text-5xl font-semibold tracking-[-0.07em] text-foreground">
             Resume Management
