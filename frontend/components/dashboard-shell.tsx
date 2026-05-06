@@ -10,8 +10,7 @@ import {
   LayoutGrid,
   Loader2,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelLeft,
   Settings,
   Target,
 } from "lucide-react";
@@ -168,56 +167,48 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       >
         <aside
           className={cn(
-            "hidden border-r border-border bg-[var(--sidebar-surface)] py-8 backdrop-blur-sm lg:flex lg:flex-col",
+            "relative z-50 hidden overflow-visible border-r border-border bg-[var(--sidebar-surface)] py-8 backdrop-blur-sm lg:flex lg:flex-col",
             sidebarCollapsed ? "items-center px-3" : "px-5",
           )}
         >
-          <div className={cn("flex w-full items-center", sidebarCollapsed ? "justify-center" : "justify-between")}>
+          <div className={cn("flex w-full items-center", sidebarCollapsed ? "justify-center" : "justify-start")}>
             <AppLogo
               href="/dashboard"
               className={cn(!sidebarCollapsed && "px-2")}
               showText={!sidebarCollapsed}
             />
-            {!sidebarCollapsed ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label="Collapse sidebar"
-                title="Collapse sidebar"
-                onClick={handleToggleSidebar}
-                className="h-10 w-10 px-0"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </Button>
-            ) : null}
           </div>
 
-          {sidebarCollapsed ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
-              onClick={handleToggleSidebar}
-              className="mt-6 h-10 w-10 px-0"
-            >
-              <PanelLeftOpen className="h-4 w-4" />
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            aria-expanded={!sidebarCollapsed}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={handleToggleSidebar}
+            className="absolute -right-4 top-8 z-[80] h-9 w-9 rounded-full px-0 shadow-[0_12px_30px_var(--card-shadow)]"
+          >
+            <PanelLeft
+              className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                sidebarCollapsed && "rotate-180",
+              )}
+            />
+          </Button>
 
-          <nav aria-label="Primary" className={cn("space-y-2", sidebarCollapsed ? "mt-6" : "mt-12")}>
+          <nav aria-label="Primary" className="mt-12 space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = item.isActive(pathname);
+              const tooltipId = `sidebar-tooltip-${item.label.toLowerCase()}`;
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-label={sidebarCollapsed ? item.label : undefined}
-                  title={sidebarCollapsed ? item.label : undefined}
+                  aria-describedby={sidebarCollapsed ? tooltipId : undefined}
                   className={cn(
                     "group relative flex items-center gap-4 rounded-[18px] text-lg font-medium tracking-[-0.04em] transition",
                     sidebarCollapsed ? "h-12 w-12 justify-center px-0 py-0" : "px-5 py-4",
@@ -230,8 +221,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                   <span className={cn(sidebarCollapsed && "sr-only")}>{item.label}</span>
                   {sidebarCollapsed ? (
                     <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-full top-1/2 z-30 ml-3 -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground opacity-0 shadow-[0_14px_34px_var(--card-shadow)] transition group-hover:opacity-100 group-focus-visible:opacity-100"
+                      id={tooltipId}
+                      role="tooltip"
+                      className="pointer-events-none invisible absolute left-full top-1/2 z-[1000] ml-3 -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground opacity-0 shadow-[0_14px_34px_var(--card-shadow)] transition group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100"
                     >
                       {item.label}
                     </span>
