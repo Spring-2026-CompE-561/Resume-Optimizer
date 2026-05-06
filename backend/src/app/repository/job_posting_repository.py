@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.app.models.job_posting import JobPosting
@@ -40,9 +40,29 @@ class JobPostingRepository:
     def get_all_by_user(db: Session, owner_id: int) -> list[JobPosting]:
         return list(
             db.scalars(
-                select(JobPosting).where(JobPosting.owner_id == owner_id)
+                select(JobPosting)
+                .where(JobPosting.owner_id == owner_id)
+                .order_by(JobPosting.created_at.desc(), JobPosting.id.desc())
             ).all()
         )
+
+    @staticmethod
+    def get_page_by_user(db: Session, owner_id: int, *, offset: int, limit: int) -> list[JobPosting]:
+        return list(
+            db.scalars(
+                select(JobPosting)
+                .where(JobPosting.owner_id == owner_id)
+                .order_by(JobPosting.created_at.desc(), JobPosting.id.desc())
+                .offset(offset)
+                .limit(limit)
+            ).all()
+        )
+
+    @staticmethod
+    def count_by_user(db: Session, owner_id: int) -> int:
+        return db.scalar(
+            select(func.count()).select_from(JobPosting).where(JobPosting.owner_id == owner_id)
+        ) or 0
 
     @staticmethod
     def delete(db: Session, job_posting: JobPosting) -> None:

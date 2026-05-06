@@ -2,6 +2,9 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from src.app.schemas.pagination import PaginationMeta
+
+
 class ResumeResponse(BaseModel):
     id: int
     user_id: int
@@ -13,3 +16,8 @@ class ResumeResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ResumeListResponse(BaseModel):
+    items: list[ResumeResponse]
+    pagination: PaginationMeta

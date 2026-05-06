@@ -3,14 +3,21 @@ import re
 from typing import Annotated
 from urllib.parse import unquote, urlparse
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from src.app.core.database import get_db
 from src.app.core.dependencies import CurrentUser
 from src.app.exceptions.job_posting_exceptions import job_posting_not_found_exception
 from src.app.repository.job_posting_repository import JobPostingRepository
-from src.app.schemas.job_posting import JobPostingCreate, JobPostingOut
+from src.app.schemas.job_posting import JobPostingCreate, JobPostingListResponse, JobPostingOut
+from src.app.schemas.pagination import (
+    DEFAULT_LIMIT,
+    DEFAULT_PAGE,
+    MAX_LIMIT,
+    build_pagination_meta,
+    pagination_offset,
+)
 from src.app.services import keyword_service, scrape_service
 
 api_router = APIRouter(prefix="/job-postings", tags=["job-postings"])
@@ -93,13 +100,24 @@ def create_job_posting(
     return JobPostingOut.model_validate(job_posting)
 
 
-@api_router.get("", response_model=list[JobPostingOut])
+@api_router.get("", response_model=JobPostingListResponse)
 def list_job_postings(
     user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
-) -> list[JobPostingOut]:
-    postings = JobPostingRepository.get_all_by_user(db, owner_id=user.id)
-    return [JobPostingOut.model_validate(p) for p in postings]
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+) -> JobPostingListResponse:
+    total = JobPostingRepository.count_by_user(db, owner_id=user.id)
+    postings = JobPostingRepository.get_page_by_user(
+        db,
+        owner_id=user.id,
+        offset=pagination_offset(page=page, limit=limit),
+        limit=limit,
+    )
+    return JobPostingListResponse(
+        items=[JobPostingOut.model_validate(p) for p in postings],
+        pagination=build_pagination_meta(page=page, limit=limit, total=total),
+    )
 
 
 @api_router.get("/{job_posting_id}", response_model=JobPostingOut)

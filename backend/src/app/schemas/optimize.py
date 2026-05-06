@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from src.app.schemas.pagination import PaginationMeta
+
 
 class ResumeSection(BaseModel):
     title: str
@@ -48,3 +50,4 @@ class OptimizationRunOut(BaseModel):
 
 class OptimizationRunCollection(BaseModel):
     items: list[OptimizationRunOut]
+    pagination: PaginationMeta

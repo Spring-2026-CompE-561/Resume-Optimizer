@@ -15,7 +15,8 @@ from src.app.models.user import User
 from src.app.repository.job_posting_repository import JobPostingRepository
 from src.app.repository.optimization_repository import OptimizationRepository
 from src.app.repository.resume_repository import ResumeRepository
-from src.app.schemas.optimize import OptimizationRunOut
+from src.app.schemas.optimize import OptimizationRunCollection, OptimizationRunOut
+from src.app.schemas.pagination import build_pagination_meta, pagination_offset
 from src.app.services import ai_client, prompt_builder
 from src.app.services.document_render_service import DocumentRenderService
 from src.app.services.storage_service import StorageService
@@ -73,8 +74,24 @@ def serialize_run(run: OptimizationRun) -> OptimizationRunOut:
     return _serialize_run(run)
 
 
-def list_runs_for_user(*, db: Session, user: User) -> list[OptimizationRunOut]:
-    return [_serialize_run(run) for run in OptimizationRepository.get_all_by_user(db, user.id)]
+def list_runs_for_user(
+    *,
+    db: Session,
+    user: User,
+    page: int,
+    limit: int,
+) -> OptimizationRunCollection:
+    total = OptimizationRepository.count_by_user(db, user.id)
+    runs = OptimizationRepository.get_page_by_user(
+        db,
+        user.id,
+        offset=pagination_offset(page=page, limit=limit),
+        limit=limit,
+    )
+    return OptimizationRunCollection(
+        items=[_serialize_run(run) for run in runs],
+        pagination=build_pagination_meta(page=page, limit=limit, total=total),
+    )
 
 
 def get_run_for_user(*, db: Session, user: User, optimization_run_id: int) -> OptimizationRunOut:

@@ -11,6 +11,20 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  pagination: PaginationMeta;
+}
+
 export interface ResumeRecord {
   id: number;
   user_id: number;

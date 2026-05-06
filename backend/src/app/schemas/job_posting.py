@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
+from src.app.schemas.pagination import PaginationMeta
+
 
 class JobPostingCreate(BaseModel):
     source_url: HttpUrl | None = None
@@ -60,3 +62,8 @@ class JobPostingOut(BaseModel):
     skills: list[JobPostingSkillOut]
 
     model_config = {"from_attributes": True}
+
+
+class JobPostingListResponse(BaseModel):
+    items: list[JobPostingOut]
+    pagination: PaginationMeta
