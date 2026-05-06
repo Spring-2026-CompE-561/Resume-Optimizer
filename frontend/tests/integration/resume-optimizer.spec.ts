@@ -72,6 +72,12 @@ test("browser login, management pages, workflow, and history all work", async ({
 
   await expect(page).toHaveURL(/\/dashboard\/results\/\d+$/);
   await expect(page.getByRole("heading", { name: "Optimization Result" })).toBeVisible();
+  await expect(page.getByText("Targeted Resume Draft")).toBeVisible();
+  await page.getByRole("button", { name: "Apply suggestion" }).first().click();
+  await expect(page.getByRole("button", { name: "Applied" }).first()).toBeVisible();
+  await expect(page.getByText("Applied Improvements")).toBeVisible();
+  await page.getByRole("button", { name: /Apply all/ }).click();
+  await expect(page.getByRole("button", { name: "All applied" })).toBeVisible();
   await expect(page.locator("body")).not.toContainText("\\documentclass");
 
   const downloadPromise = page.waitForEvent("download");
