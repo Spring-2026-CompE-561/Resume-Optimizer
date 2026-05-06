@@ -341,3 +341,47 @@ def test_get_optimization_run_wrong_owner_returns_404(client: TestClient, db_ses
     )
 
     assert response.status_code == 404
+
+
+def test_delete_optimization_run_removes_only_owner_run(client: TestClient, db_session):
+    owner_id, owner_token = _register_and_get_token(client, "delete-owner@example.com")
+    _, other_token = _register_and_get_token(client, "delete-other@example.com")
+
+    run = OptimizationRun(
+        user_id=owner_id,
+        resume_id=None,
+        job_posting_id=None,
+        optimized_resume_text="Optimized text",
+        latex_content="\\documentclass{article}",
+        suggestions=[],
+        job_keywords=[],
+        customization_notes=None,
+        resume_plaintext_snapshot="Resume",
+        job_description_snapshot="Job",
+        target_job_title="Backend Engineer",
+        target_company="Acme",
+        pdf_path=None,
+        provider_name="local",
+        latency_ms=0,
+    )
+    db_session.add(run)
+    db_session.commit()
+    db_session.refresh(run)
+
+    wrong_owner_response = client.delete(
+        f"/api/v1/optimize/{run.id}",
+        headers={"Authorization": f"Bearer {other_token}"},
+    )
+    assert wrong_owner_response.status_code == 404
+
+    delete_response = client.delete(
+        f"/api/v1/optimize/{run.id}",
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert delete_response.status_code == 204
+
+    get_response = client.get(
+        f"/api/v1/optimize/{run.id}",
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert get_response.status_code == 404

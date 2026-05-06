@@ -113,6 +113,13 @@ def get_pdf_path_for_user(*, db: Session, user: User, optimization_run_id: int) 
     return pdf_path
 
 
+def delete_run_for_user(*, db: Session, user: User, optimization_run_id: int) -> None:
+    run = OptimizationRepository.get_by_id(db, optimization_run_id)
+    if not run or run.user_id != user.id:
+        raise optimization_run_not_found_exception
+    OptimizationRepository.delete(db, run)
+
+
 def _create_optimization_run(
     *,
     db: Session,

@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -72,6 +72,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     })();
   }
 
+  function handleFormKeyDown(event: KeyboardEvent<HTMLFormElement>) {
+    if (event.key !== "Enter" || event.shiftKey || isSubmittingRef.current) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.requestSubmit();
+  }
+
   return (
     <main className="min-h-screen px-6 py-6 lg:px-8 lg:py-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[1380px] flex-col rounded-[36px] border border-border bg-card-elevated p-6 shadow-[0_30px_80px_var(--card-shadow)] backdrop-blur-sm lg:p-8">
@@ -95,7 +104,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                     className={`rounded-[14px] px-5 py-3 text-sm font-medium tracking-[-0.03em] transition ${
                       mode === "signin"
                         ? "bg-card text-foreground shadow-[0_10px_24px_var(--soft-shadow)]"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-accent-foreground hover:text-foreground"
                     }`}
                   >
                     Sign in
@@ -105,7 +114,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                     className={`rounded-[14px] px-5 py-3 text-sm font-medium tracking-[-0.03em] transition ${
                       mode === "signup"
                         ? "bg-card text-foreground shadow-[0_10px_24px_var(--soft-shadow)]"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-accent-foreground hover:text-foreground"
                     }`}
                   >
                     Sign up
@@ -119,7 +128,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                   </CardDescription>
                 </div>
 
-                <form className="space-y-5" onSubmit={handleSubmit}>
+                <form className="space-y-5" onSubmit={handleSubmit} onKeyDown={handleFormKeyDown}>
                   {mode === "signup" ? (
                     <div className="space-y-2.5">
                       <Label htmlFor="name">Full name</Label>
@@ -171,7 +180,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                     </div>
                   </div>
 
-                  <Button className="mt-4 w-full" size="lg" type="submit" disabled={isSubmitting}>
+                  <Button
+                    className="mt-4 w-full bg-primary font-semibold text-primary-foreground shadow-[0_18px_40px_var(--primary-shadow)] hover:bg-primary hover:brightness-95 disabled:border disabled:border-border disabled:bg-card disabled:text-foreground disabled:opacity-100 disabled:shadow-none"
+                    size="lg"
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

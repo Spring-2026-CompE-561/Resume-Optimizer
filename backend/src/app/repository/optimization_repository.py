@@ -86,3 +86,8 @@ class OptimizationRepository:
         return db.scalar(
             select(func.count()).select_from(OptimizationRun).where(OptimizationRun.user_id == user_id)
         ) or 0
+
+    @staticmethod
+    def delete(db: Session, optimization_run: OptimizationRun) -> None:
+        db.delete(optimization_run)
+        db.commit()

@@ -1,8 +1,8 @@
 "use client";
 
 import type { ChangeEvent, ReactNode } from "react";
-import { useDeferredValue, useEffect, useEffectEvent, useState } from "react";
-import { BriefcaseBusiness, CalendarDays, FileText, Loader2, Search, Target } from "lucide-react";
+import { useDeferredValue, useEffect, useEffectEvent, useState, useTransition } from "react";
+import { BriefcaseBusiness, CalendarDays, FileText, Loader2, Search, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -13,10 +13,11 @@ import {
   formatDate,
   formatDateTime,
 } from "@/components/app-ui";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { fetchOptimizations, fetchOptimizationsPage } from "@/lib/api";
-import { loadResumes } from "@/lib/dashboard-cache";
+import { deleteOptimization, fetchOptimizations, fetchOptimizationsPage } from "@/lib/api";
+import { invalidateDashboardResource, loadResumes } from "@/lib/dashboard-cache";
 import { downloadAuthenticatedFile } from "@/lib/download";
 import type { OptimizationRunRecord, PaginationMeta, ResumeRecord } from "@/lib/types";
 
@@ -30,6 +31,7 @@ export function DashboardHistoryPage() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const deferredQuery = useDeferredValue(searchQuery);
 
   const refreshHistory = useEffectEvent(async (targetPage: number, query: string) => {
@@ -112,6 +114,29 @@ export function DashboardHistoryPage() {
       const message = error instanceof Error ? error.message : "Download failed.";
       toast.error(message);
     }
+  }
+
+  function handleDelete(activeOptimization: OptimizationRunRecord) {
+    const confirmed = window.confirm("Delete this optimization draft from your history?");
+    if (!confirmed) {
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await deleteOptimization(activeOptimization.id);
+        invalidateDashboardResource("optimizations");
+        if (optimizations.length === 1 && page > 1) {
+          setPage(page - 1);
+        } else {
+          await refreshHistory(page, deferredQuery);
+        }
+        toast.success("Optimization draft deleted.");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Delete failed.";
+        toast.error(message);
+      }
+    });
   }
 
   const activeOptimization =
@@ -225,7 +250,23 @@ export function DashboardHistoryPage() {
                       {activeOptimization.target_job_title || "Optimized draft"}
                     </h2>
                   </div>
-                  <StatusPill>Completed</StatusPill>
+                  <div className="flex shrink-0 flex-col items-end gap-3">
+                    <StatusPill>Completed</StatusPill>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(activeOptimization)}
+                      disabled={isPending}
+                    >
+                      {isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      Delete
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-base leading-7 tracking-[-0.03em] text-muted-foreground">
                   {activeOptimization.target_company || "Target company"} -{" "}
@@ -252,7 +293,7 @@ export function DashboardHistoryPage() {
                 <DetailMetric label="Status" value="Completed" />
               </div>
 
-              <div className="rounded-[24px] bg-accent p-5">
+              <div className="rounded-[24px] border border-border bg-input p-5">
                 <div className="space-y-3">
                   <h3 className="text-xl font-semibold tracking-[-0.05em] text-foreground">
                     Draft Content
@@ -264,20 +305,22 @@ export function DashboardHistoryPage() {
               </div>
 
               <div className="border-t border-border pt-6">
-                <h3 className="mb-4 text-2xl font-semibold tracking-[-0.05em] text-foreground">
-                  Optimized Resume Preview
-                </h3>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h3 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
+                    Optimized Resume Preview
+                  </h3>
+                  <DownloadButton
+                    className="sm:w-auto"
+                    onClick={() => handleDownload(activeOptimization)}
+                    disabled={!activeOptimization.pdf_download_url}
+                  />
+                </div>
                 <PreviewResumeCard
                   content={activeOptimization.optimized_resume_text}
                   title={activeResume?.file_name || "Optimized Resume"}
                   subtitle={activeOptimization.target_job_title || "Optimized draft"}
                 />
               </div>
-
-              <DownloadButton
-                onClick={() => handleDownload(activeOptimization)}
-                disabled={!activeOptimization.pdf_download_url}
-              />
             </div>
           ) : (
             <div className="space-y-4">
@@ -344,7 +387,7 @@ function DetailMetric({
   value: string;
 }) {
   return (
-    <div className="rounded-[20px] bg-accent px-4 py-3">
+    <div className="rounded-[20px] border border-border bg-input px-4 py-3">
       <div className="flex items-center gap-2 text-sm font-medium tracking-[-0.03em] text-muted-foreground">
         {icon}
         {label}

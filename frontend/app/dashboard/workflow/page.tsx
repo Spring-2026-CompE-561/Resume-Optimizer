@@ -1,5 +1,5 @@
-import { DashboardWorkflowPage } from "@/components/dashboard-workflow-page";
+import { redirect } from "next/navigation";
 
 export default function DashboardWorkflowRoute() {
-  return <DashboardWorkflowPage />;
+  redirect("/dashboard");
 }

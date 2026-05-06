@@ -2,14 +2,12 @@
 
 import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { BriefcaseBusiness, CalendarDays, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import {
-  DetailRow,
   DownloadButton,
-  KeywordPill,
   PreviewResumeCard,
 } from "@/components/app-ui";
 import { Button } from "@/components/ui/button";
@@ -252,13 +250,19 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
         </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="space-y-6">
+      <div className="space-y-6">
           <Card className="rounded-[32px] p-5 sm:p-6">
             <div className="space-y-5">
-              <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
-                Optimized Resume Preview
-              </h2>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
+                  Optimized Resume Preview
+                </h2>
+                <DownloadButton
+                  className="sm:w-auto"
+                  onClick={handleDownload}
+                  disabled={!optimization.pdf_download_url}
+                />
+              </div>
               <PreviewResumeCard
                 content={draftText}
                 title={deriveCandidateName(resume)}
@@ -355,45 +359,6 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
               </Button>
             </div>
           </Card>
-        </div>
-
-        <Card className="h-fit rounded-[32px] p-6">
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
-              Optimization Summary
-            </h2>
-            <div className="space-y-5">
-              <DetailRow
-                label="Target Role"
-                value={optimization.target_job_title || "Optimized draft"}
-                icon={<BriefcaseBusiness className="h-4 w-4" />}
-              />
-              <DetailRow label="Company" value={optimization.target_company || "Target company"} />
-              <DetailRow
-                label="Optimization Date"
-                value={new Date(optimization.created_at).toLocaleDateString()}
-                icon={<CalendarDays className="h-4 w-4" />}
-              />
-            </div>
-
-            <div className="border-t border-border pt-6">
-              <h3 className="mb-4 text-xl font-semibold tracking-[-0.05em] text-foreground">
-                Top Keywords Added
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {optimization.job_keywords.length > 0 ? (
-                  optimization.job_keywords.map((keyword) => (
-                    <KeywordPill key={keyword} label={keyword} />
-                  ))
-                ) : (
-                  <KeywordPill label="Role-aligned keywords" />
-                )}
-              </div>
-            </div>
-
-            <DownloadButton onClick={handleDownload} disabled={!optimization.pdf_download_url} />
-          </div>
-        </Card>
       </div>
     </div>
   );

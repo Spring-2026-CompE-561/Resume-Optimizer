@@ -156,21 +156,22 @@ export function PaginationControls({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-[24px] border border-border bg-card px-4 py-3 shadow-[0_14px_36px_var(--soft-shadow)] sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex max-w-full flex-col gap-3 overflow-hidden rounded-[24px] border border-border bg-card px-4 py-3 shadow-[0_14px_36px_var(--soft-shadow)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <p className="text-sm font-medium text-muted-foreground">
         Showing {startItem}-{endItem} of {pagination.total}
       </p>
-      <div className="flex items-center gap-3">
+      <div className="grid w-full max-w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:w-auto">
         <Button
           type="button"
           variant="secondary"
           size="sm"
           onClick={() => onPageChange(pagination.page - 1)}
           disabled={!pagination.has_previous}
+          className="min-w-0 px-3"
         >
           Previous
         </Button>
-        <span className="min-w-[92px] text-center text-sm font-semibold text-foreground">
+        <span className="min-w-[78px] text-center text-sm font-semibold text-foreground">
           Page {displayPage} of {displayPages}
         </span>
         <Button
@@ -179,6 +180,7 @@ export function PaginationControls({
           size="sm"
           onClick={() => onPageChange(pagination.page + 1)}
           disabled={!pagination.has_next}
+          className="min-w-0 px-3"
         >
           Next
         </Button>
@@ -485,14 +487,24 @@ export function ProgressList({
 }
 
 export function DownloadButton({
+  className,
   disabled,
   onClick,
 }: {
+  className?: string;
   disabled?: boolean;
   onClick: () => void | Promise<void>;
 }) {
   return (
-    <Button className="w-full" size="lg" onClick={onClick} disabled={disabled}>
+    <Button
+      className={cn(
+        "w-full bg-primary font-semibold text-primary-foreground shadow-[0_18px_40px_var(--primary-shadow)] hover:bg-primary hover:brightness-95 disabled:border disabled:border-border disabled:bg-card disabled:text-foreground disabled:opacity-100 disabled:shadow-none",
+        className,
+      )}
+      size="lg"
+      onClick={onClick}
+      disabled={disabled}
+    >
       <Download className="mr-2 h-4 w-4" />
       Download PDF
     </Button>

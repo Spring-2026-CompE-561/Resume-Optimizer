@@ -210,6 +210,12 @@ export async function fetchOptimization(optimizationRunId: number) {
   return apiRequest<OptimizationRunRecord>(`optimize/${optimizationRunId}`);
 }
 
+export async function deleteOptimization(optimizationRunId: number) {
+  return apiRequest<null>(`optimize/${optimizationRunId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function uploadResume(file: File) {
   const formData = new FormData();
   formData.append("file", file);

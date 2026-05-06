@@ -167,7 +167,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       >
         <aside
           className={cn(
-            "relative z-50 hidden overflow-visible border-r border-border bg-[var(--sidebar-surface)] py-8 backdrop-blur-sm lg:flex lg:flex-col",
+            "sticky top-0 z-50 hidden h-screen self-start overflow-visible border-r border-border bg-[var(--sidebar-surface)] py-8 backdrop-blur-sm lg:flex lg:flex-col",
             sidebarCollapsed ? "items-center px-3" : "px-5",
           )}
         >
