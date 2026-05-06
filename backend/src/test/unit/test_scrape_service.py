@@ -40,6 +40,24 @@ def test_scrape_returns_title(mock_client_cls):
 
 
 @patch("src.app.services.scrape_service.httpx.Client")
+def test_scrape_prefers_metadata_title(mock_client_cls):
+    html = """
+    <html>
+      <head><meta property="og:title" content="Staff Platform Engineer"></head>
+      <body>
+        <h1 class="job-title">Platform Engineer</h1>
+        <div class="job-description">
+          Python FastAPI PostgreSQL Docker engineer role building reliable backend API systems.
+        </div>
+      </body>
+    </html>
+    """
+    mock_client_cls.return_value.__enter__.return_value.get.return_value = _mock_response(html)
+    result = scrape_job_posting("https://example.com/job/123")
+    assert result["title"] == "Staff Platform Engineer"
+
+
+@patch("src.app.services.scrape_service.httpx.Client")
 def test_scrape_returns_company(mock_client_cls):
     mock_client_cls.return_value.__enter__.return_value.get.return_value = _mock_response(FIXTURE_HTML)
     result = scrape_job_posting("https://example.com/job/123")

@@ -199,12 +199,21 @@ export async function uploadResume(file: File) {
   });
 }
 
-export async function createJobPosting(input: {
-  source_url?: string;
+type ManualJobPostingInput = {
   title?: string;
   company?: string;
-  description?: string;
-}) {
+  description: string;
+  source_url?: never;
+};
+
+type UrlJobPostingInput = {
+  source_url: string;
+  title?: string;
+  company?: never;
+  description?: never;
+};
+
+export async function createJobPosting(input: ManualJobPostingInput | UrlJobPostingInput) {
   return apiRequest<JobPostingRecord>("job-postings", {
     method: "POST",
     body: JSON.stringify(input),

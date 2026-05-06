@@ -1,5 +1,7 @@
 import hashlib
+import re
 from typing import Annotated
+from urllib.parse import unquote, urlparse
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -13,6 +15,36 @@ from src.app.services import keyword_service, scrape_service
 
 api_router = APIRouter(prefix="/job-postings", tags=["job-postings"])
 
+_GENERIC_URL_TITLE_PARTS = {
+    "career",
+    "careers",
+    "job",
+    "jobs",
+    "opening",
+    "openings",
+    "position",
+    "positions",
+    "role",
+    "roles",
+}
+
+
+def _title_from_url(url: str) -> str:
+    parsed = urlparse(url)
+    path_parts = [unquote(part) for part in parsed.path.split("/") if part]
+    candidate = next(
+        (
+            part
+            for part in reversed(path_parts)
+            if re.search(r"[a-zA-Z]", part) and part.lower() not in _GENERIC_URL_TITLE_PARTS
+        ),
+        parsed.netloc.removeprefix("www."),
+    )
+    candidate = re.sub(r"\.[a-zA-Z0-9]+$", "", candidate)
+    candidate = re.sub(r"[-_+]+", " ", candidate)
+    candidate = re.sub(r"\s+", " ", candidate).strip()
+    return candidate.title() if candidate else "Imported Job Posting"
+
 
 @api_router.post("", response_model=JobPostingOut, status_code=201)
 def create_job_posting(
@@ -21,27 +53,28 @@ def create_job_posting(
     db: Annotated[Session, Depends(get_db)],
 ) -> JobPostingOut:
     url = str(data.source_url) if data.source_url else None
+    provided_title = data.title.strip() if data.title else None
 
-    if data.description:
+    if url:
+        scraped = scrape_service.scrape_job_posting(url)
+        description = scraped["description"]
+        title = provided_title or scraped["title"] or _title_from_url(url)
+        company = scraped["company"]
+        content_hash = scraped["content_hash"]
+    else:
         description = data.description.strip()
-        title = data.title.strip() if data.title else "Custom Job Description"
+        title = provided_title or "Custom Job Description"
         company = data.company.strip() if data.company else None
         content_hash = hashlib.sha256(
             "::".join(
                 [
-                    url or "",
+                    "",
                     title or "",
                     company or "",
                     description,
                 ]
             ).encode("utf-8")
         ).hexdigest()
-    else:
-        scraped = scrape_service.scrape_job_posting(url or "")
-        description = scraped["description"]
-        title = scraped["title"]
-        company = scraped["company"]
-        content_hash = scraped["content_hash"]
 
     job_posting = JobPostingRepository.create(
         db,

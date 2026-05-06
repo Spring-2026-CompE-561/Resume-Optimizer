@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, LockKeyhole, Mail, UserRound } from "lucide-react";
@@ -36,17 +36,25 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const copy = authCopy[mode];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    startTransition(async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+
+    void (async () => {
       try {
         const session =
           mode === "signup"
-            ? await register({ name: name || undefined, email, password })
+            ? await register({ name: name.trim() || undefined, email, password })
             : await login(email, password);
 
         clearDashboardCache();
@@ -58,8 +66,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         const message =
           error instanceof Error ? error.message : "We couldn't complete that request.";
         toast.error(message);
+        isSubmittingRef.current = false;
+        setIsSubmitting(false);
       }
-    });
+    })();
   }
 
   return (
@@ -119,7 +129,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                           id="name"
                           value={name}
                           onChange={(event) => setName(event.target.value)}
-                          placeholder="Jordan Lee"
+                          placeholder="Your name"
                           autoComplete="name"
                           className="h-14 rounded-2xl border-border bg-[#fbfcff] pl-11"
                         />
@@ -161,8 +171,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                     </div>
                   </div>
 
-                  <Button className="mt-4 w-full" size="lg" type="submit" disabled={isPending}>
-                    {isPending ? (
+                  <Button className="mt-4 w-full" size="lg" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         {mode === "signin" ? "Signing in..." : "Creating account..."}

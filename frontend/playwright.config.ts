@@ -24,7 +24,7 @@ export default defineConfig({
         "docker compose up -d postgres",
         "cd backend",
         "uv sync --python 3.14.2",
-        `DATABASE_URL=postgresql+psycopg://resume:resume@127.0.0.1:5432/resume_optimizer OPTIMIZE_AI_MODE=local CORS_ORIGINS='[\"http://127.0.0.1:${frontendPort}\"]' uv run --python 3.14.2 uvicorn src.app.main:app --host 127.0.0.1 --port ${backendPort}`,
+        `DATABASE_URL=postgresql+psycopg://resume:resume@127.0.0.1:5432/resume_optimizer OPTIMIZE_AI_MODE=local STORAGE_ROOT=storage CORS_ORIGINS='[\"http://127.0.0.1:${frontendPort}\"]' uv run --python 3.14.2 uvicorn src.app.main:app --host 127.0.0.1 --port ${backendPort}`,
       ].join(" && "),
       url: `http://127.0.0.1:${backendPort}/health`,
       reuseExistingServer: !process.env.CI,

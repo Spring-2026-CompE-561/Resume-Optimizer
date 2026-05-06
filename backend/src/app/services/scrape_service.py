@@ -35,6 +35,15 @@ def _extract_field(soup: BeautifulSoup, selectors: list[str]) -> str | None:
     return None
 
 
+def _extract_meta_content(soup: BeautifulSoup, selectors: list[str]) -> str | None:
+    for selector in selectors:
+        tag = soup.select_one(selector)
+        content = tag.get("content") if tag else None
+        if isinstance(content, str) and content.strip():
+            return _normalize_text(content)
+    return None
+
+
 def scrape_job_posting(url: str) -> dict:
     """Fetch and parse a job posting URL. Returns title, company, description, and content_hash."""
     try:
@@ -47,11 +56,15 @@ def scrape_job_posting(url: str) -> dict:
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
 
-    title = _extract_field(soup, [
+    title = _extract_meta_content(soup, [
+        "meta[property='og:title']",
+        "meta[name='twitter:title']",
+    ]) or _extract_field(soup, [
         "[class*='job-title']",
         "[class*='jobtitle']",
         "[class*='position-title']",
         "h1",
+        "title",
     ])
 
     company = _extract_field(soup, [

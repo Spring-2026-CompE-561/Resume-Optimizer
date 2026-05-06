@@ -32,10 +32,11 @@ test("browser login, management pages, workflow, and history all work", async ({
   await expect(page).toHaveURL(/\/auth\?mode=signin$/);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
-  await page.locator("form").getByRole("button", { name: /^Sign in/ }).click();
+  await page.getByLabel("Password").press("Enter");
 
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByText("Playwright User")).toBeVisible();
+  await expect(page.getByText("Welcome back, Playwright")).toBeVisible();
 
   await page.goto("/dashboard/resumes");
   await expect(page).toHaveURL(/\/dashboard\/resumes$/);
@@ -49,9 +50,9 @@ test("browser login, management pages, workflow, and history all work", async ({
 
   await page.goto("/dashboard/jobs");
   await expect(page).toHaveURL(/\/dashboard\/jobs$/);
+  await expect(page.getByLabel("Source URL")).not.toBeVisible();
   await page.getByLabel("Job Title").fill("Backend Engineer");
   await page.getByLabel("Company").fill("Acme");
-  await page.getByLabel("Source URL").fill("https://example.com/jobs/backend-engineer");
   await page.getByLabel("Job Description").fill(
     "Need Python, FastAPI, Docker, and PostgreSQL experience building backend APIs.",
   );

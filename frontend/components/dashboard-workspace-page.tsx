@@ -16,15 +16,18 @@ import { IconCircle } from "@/components/app-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  loadCurrentUser,
   loadJobPostings,
   loadOptimizations,
   loadResumes,
 } from "@/lib/dashboard-cache";
 import type {
+  AuthUser,
   JobPostingRecord,
   OptimizationRunRecord,
   ResumeRecord,
 } from "@/lib/types";
+import { getFirstName } from "@/lib/user-display";
 import {
   readSelectedJobId,
   readSelectedResumeId,
@@ -36,6 +39,7 @@ interface WorkspaceBundle {
   jobPostings: JobPostingRecord[];
   optimizations: OptimizationRunRecord[];
   resumes: ResumeRecord[];
+  user: AuthUser;
 }
 
 function formatDate(value: string) {
@@ -53,7 +57,8 @@ export function DashboardWorkspacePage() {
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
   const loadWorkspace = useEffectEvent(async () => {
-    const [resumes, jobPostings, optimizations] = await Promise.all([
+    const [user, resumes, jobPostings, optimizations] = await Promise.all([
+      loadCurrentUser(),
       loadResumes(),
       loadJobPostings(),
       loadOptimizations(),
@@ -76,6 +81,7 @@ export function DashboardWorkspacePage() {
         (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
       ),
       resumes,
+      user,
     });
   });
 
@@ -118,12 +124,14 @@ export function DashboardWorkspacePage() {
   const selectedJob =
     data?.jobPostings.find((job) => job.id === selectedJobId) ?? data?.jobPostings[0] ?? null;
   const latestOptimization = data?.optimizations[0] ?? null;
+  const firstName = getFirstName(data?.user ?? null);
 
   return (
     <div className="space-y-8">
       <div className="space-y-3">
         <p className="text-5xl font-semibold tracking-[-0.07em] text-foreground">
-          Welcome back, Jordan <span className="inline-block">👋</span>
+          {firstName ? `Welcome back, ${firstName}` : "Welcome back"}{" "}
+          <span className="inline-block">👋</span>
         </p>
         <p className="text-lg tracking-[-0.03em] text-muted-foreground">
           Pick up where you left off and keep your next application moving.

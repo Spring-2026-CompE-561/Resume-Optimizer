@@ -8,7 +8,6 @@ import {
   Globe,
   Loader2,
   Trash2,
-  WandSparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,16 +25,21 @@ import {
   writeSelectedJobId,
 } from "@/lib/workspace-selection";
 
-const emptyForm = {
+const emptyManualForm = {
   company: "",
   description: "",
+  title: "",
+};
+
+const emptyUrlForm = {
   source_url: "",
   title: "",
 };
 
 export function DashboardJobsPage() {
   const [entryMode, setEntryMode] = useState<"manual" | "url">("manual");
-  const [form, setForm] = useState(emptyForm);
+  const [manualForm, setManualForm] = useState(emptyManualForm);
+  const [urlForm, setUrlForm] = useState(emptyUrlForm);
   const [jobs, setJobs] = useState<JobPostingRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -73,28 +77,34 @@ export function DashboardJobsPage() {
   function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (entryMode === "manual" && !form.description.trim()) {
+    if (entryMode === "manual" && !manualForm.description.trim()) {
       toast.error("Add the job description first.");
       return;
     }
 
-    if (entryMode === "url" && !form.source_url.trim()) {
+    if (entryMode === "url" && !urlForm.source_url.trim()) {
       toast.error("Add the job posting URL first.");
       return;
     }
 
     startTransition(async () => {
       try {
-        const created = await createJobPosting({
-          company: form.company || undefined,
-          description: entryMode === "manual" ? form.description || undefined : undefined,
-          source_url: form.source_url || undefined,
-          title: form.title || undefined,
-        });
+        const created =
+          entryMode === "manual"
+            ? await createJobPosting({
+                company: manualForm.company.trim() || undefined,
+                description: manualForm.description.trim(),
+                title: manualForm.title.trim() || undefined,
+              })
+            : await createJobPosting({
+                source_url: urlForm.source_url.trim(),
+                title: urlForm.title.trim() || undefined,
+              });
         invalidateDashboardResource("jobPostings");
         const nextJobs = await loadJobPostings();
         setJobs(nextJobs);
-        setForm(emptyForm);
+        setManualForm(emptyManualForm);
+        setUrlForm(emptyUrlForm);
         writeSelectedJobId(created.id);
         toast.success("Role saved.");
       } catch (error) {
@@ -169,54 +179,77 @@ export function DashboardJobsPage() {
           </div>
 
           <form className="space-y-5" onSubmit={handleCreate}>
-            <div className="grid gap-5 md:grid-cols-2">
-              <div className="space-y-2.5">
-                <Label htmlFor="job-title">Job Title</Label>
-                <Input
-                  id="job-title"
-                  value={form.title}
-                  onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="Senior Product Manager"
-                  className="h-12 rounded-2xl bg-[#fbfcff]"
-                />
-              </div>
-              <div className="space-y-2.5">
-                <Label htmlFor="job-company">Company</Label>
-                <Input
-                  id="job-company"
-                  value={form.company}
-                  onChange={(event) => setForm((current) => ({ ...current, company: event.target.value }))}
-                  placeholder="NovaTech"
-                  className="h-12 rounded-2xl bg-[#fbfcff]"
-                />
-              </div>
-            </div>
+            {entryMode === "manual" ? (
+              <>
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="space-y-2.5">
+                    <Label htmlFor="job-title">Job Title</Label>
+                    <Input
+                      id="job-title"
+                      value={manualForm.title}
+                      onChange={(event) =>
+                        setManualForm((current) => ({ ...current, title: event.target.value }))
+                      }
+                      placeholder="Senior Product Manager"
+                      className="h-12 rounded-2xl bg-[#fbfcff]"
+                    />
+                  </div>
+                  <div className="space-y-2.5">
+                    <Label htmlFor="job-company">Company</Label>
+                    <Input
+                      id="job-company"
+                      value={manualForm.company}
+                      onChange={(event) =>
+                        setManualForm((current) => ({ ...current, company: event.target.value }))
+                      }
+                      placeholder="NovaTech"
+                      className="h-12 rounded-2xl bg-[#fbfcff]"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2.5">
-              <Label htmlFor="job-source-url">Source URL</Label>
-              <Input
-                id="job-source-url"
-                value={form.source_url}
-                onChange={(event) => setForm((current) => ({ ...current, source_url: event.target.value }))}
-                placeholder="https://company.com/careers/role"
-                className="h-12 rounded-2xl bg-[#fbfcff]"
-              />
-            </div>
-
-            <div className="space-y-2.5">
-              <Label htmlFor="job-description">Job Description</Label>
-              <Textarea
-                id="job-description"
-                value={form.description}
-                onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                placeholder={
-                  entryMode === "manual"
-                    ? "Paste the job description here..."
-                    : "Optional notes if you want to supplement the scraped role..."
-                }
-                className="min-h-[220px] rounded-[24px] bg-[#fbfcff]"
-              />
-            </div>
+                <div className="space-y-2.5">
+                  <Label htmlFor="job-description">Job Description</Label>
+                  <Textarea
+                    id="job-description"
+                    value={manualForm.description}
+                    onChange={(event) =>
+                      setManualForm((current) => ({ ...current, description: event.target.value }))
+                    }
+                    placeholder="Paste the job description here..."
+                    className="min-h-[220px] rounded-[24px] bg-[#fbfcff]"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2.5">
+                  <Label htmlFor="job-url-title">Job Title <span className="text-muted-foreground">(optional)</span></Label>
+                  <Input
+                    id="job-url-title"
+                    value={urlForm.title}
+                    onChange={(event) =>
+                      setUrlForm((current) => ({ ...current, title: event.target.value }))
+                    }
+                    placeholder="Senior Product Manager"
+                    className="h-12 rounded-2xl bg-[#fbfcff]"
+                  />
+                </div>
+                <div className="space-y-2.5">
+                  <Label htmlFor="job-source-url">Source URL</Label>
+                  <Input
+                    id="job-source-url"
+                    type="url"
+                    value={urlForm.source_url}
+                    onChange={(event) =>
+                      setUrlForm((current) => ({ ...current, source_url: event.target.value }))
+                    }
+                    placeholder="https://company.com/careers/role"
+                    className="h-12 rounded-2xl bg-[#fbfcff]"
+                  />
+                </div>
+              </div>
+            )}
 
             <Button size="lg" type="submit" disabled={isPending}>
               {isPending ? (
