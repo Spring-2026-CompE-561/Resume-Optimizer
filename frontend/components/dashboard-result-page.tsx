@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState, useTransition } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { BriefcaseBusiness, CalendarDays, Loader2, Sparkles } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -39,6 +39,13 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
   const router = useRouter();
   const [optimization, setOptimization] = useState<OptimizationRunRecord | null>(null);
   const [resume, setResume] = useState<ResumeRecord | null>(null);
+  const [baseDraftText, setBaseDraftText] = useState("");
+  const [draftText, setDraftText] = useState("");
+  const [appliedSuggestionIndexes, setAppliedSuggestionIndexes] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const appliedSuggestionIndexesRef = useRef<Set<number>>(new Set());
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -47,8 +54,14 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
       fetchOptimization(optimizationId),
       loadResumes(),
     ]);
+    const nextDraftText = nextOptimization.optimized_resume_text || "";
+    appliedSuggestionIndexesRef.current = new Set();
     setOptimization(nextOptimization);
     setResume(resumes.find((item) => item.id === nextOptimization.resume_id) ?? null);
+    setBaseDraftText(nextDraftText);
+    setDraftText(nextDraftText);
+    setAppliedSuggestionIndexes(new Set());
+    setLoadError(null);
   });
 
   useEffect(() => {
@@ -60,6 +73,7 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
       } catch (error) {
         if (!cancelled) {
           const message = error instanceof Error ? error.message : "Unable to load that result.";
+          setLoadError(message);
           toast.error(message);
         }
       } finally {
@@ -75,6 +89,20 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
       cancelled = true;
     };
   }, []);
+
+  async function handleRetryLoad() {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      await loadResult();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to load that result.";
+      setLoadError(message);
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function handleDownload() {
     if (!optimization?.pdf_download_url) {
@@ -113,6 +141,60 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
     });
   }
 
+  function commitAppliedSuggestions(nextAppliedIndexes: Set<number>) {
+    if (!optimization) {
+      return;
+    }
+
+    appliedSuggestionIndexesRef.current = nextAppliedIndexes;
+    setAppliedSuggestionIndexes(new Set(nextAppliedIndexes));
+
+    const appliedSuggestions = optimization.suggestions.filter((_, index) =>
+      nextAppliedIndexes.has(index),
+    );
+    const nextDraftText = buildDraftWithAppliedSuggestions(baseDraftText, appliedSuggestions);
+    setDraftText(nextDraftText);
+    setOptimization((current) =>
+      current ? { ...current, optimized_resume_text: nextDraftText } : current,
+    );
+  }
+
+  function handleApplySuggestion(index: number) {
+    if (!optimization || appliedSuggestionIndexesRef.current.has(index)) {
+      return;
+    }
+
+    const suggestion = optimization.suggestions[index]?.trim();
+    if (!suggestion) {
+      return;
+    }
+
+    const nextAppliedIndexes = new Set(appliedSuggestionIndexesRef.current);
+    nextAppliedIndexes.add(index);
+    commitAppliedSuggestions(nextAppliedIndexes);
+    toast.success("Suggestion applied.");
+  }
+
+  function handleApplyAllSuggestions() {
+    if (!optimization) {
+      return;
+    }
+
+    const nextAppliedIndexes = new Set(appliedSuggestionIndexesRef.current);
+    optimization.suggestions.forEach((suggestion, index) => {
+      if (suggestion.trim()) {
+        nextAppliedIndexes.add(index);
+      }
+    });
+
+    if (nextAppliedIndexes.size === appliedSuggestionIndexesRef.current.size) {
+      return;
+    }
+
+    commitAppliedSuggestions(nextAppliedIndexes);
+    toast.success("All suggestions applied.");
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-3 rounded-full border border-white bg-white px-5 py-3 shadow-[0_20px_50px_rgba(20,37,84,0.08)]">
@@ -126,14 +208,32 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
     return (
       <Card className="rounded-[32px] p-8">
         <div className="space-y-4">
-          <h1 className="text-3xl font-semibold tracking-[-0.06em]">Result not found</h1>
-          <Button asChild variant="secondary">
-            <Link href="/dashboard/history">Back to history</Link>
-          </Button>
+          <h1 className="text-3xl font-semibold tracking-[-0.06em]">
+            {loadError ? "Unable to load result" : "Result not found"}
+          </h1>
+          <p className="max-w-xl text-base leading-7 tracking-[-0.03em] text-muted-foreground">
+            {loadError || "This optimization result could not be found."}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {loadError ? (
+              <Button variant="secondary" onClick={handleRetryLoad}>
+                Try again
+              </Button>
+            ) : null}
+            <Button asChild variant="secondary">
+              <Link href="/dashboard/history">Back to history</Link>
+            </Button>
+          </div>
         </div>
       </Card>
     );
   }
+
+  const suggestions = optimization.suggestions;
+  const unappliedCount = suggestions.filter(
+    (_, index) => !appliedSuggestionIndexes.has(index),
+  ).length;
+  const allSuggestionsApplied = suggestions.length > 0 && unappliedCount === 0;
 
   return (
     <div className="space-y-8">
@@ -160,6 +260,7 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
                 Optimized Resume Preview
               </h2>
               <PreviewResumeCard
+                content={draftText}
                 title={deriveCandidateName(resume)}
                 subtitle={optimization.target_job_title || "Optimized draft"}
                 score={93}
@@ -169,22 +270,63 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
 
           <Card className="rounded-[32px] p-6">
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
-                AI Suggestions Applied
-              </h2>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
+                  AI Suggestions
+                </h2>
+                {suggestions.length > 1 ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleApplyAllSuggestions}
+                    disabled={allSuggestionsApplied}
+                  >
+                    {allSuggestionsApplied ? "All applied" : `Apply all (${unappliedCount})`}
+                  </Button>
+                ) : null}
+              </div>
               <div className="space-y-3">
-                {optimization.suggestions.length > 0 ? (
-                  optimization.suggestions.map((suggestion, index) => (
-                    <div
-                      key={`${suggestion}-${index}`}
-                      className="rounded-[22px] bg-accent px-4 py-3 text-base tracking-[-0.03em] text-foreground"
-                    >
-                      {suggestion}
-                    </div>
-                  ))
+                {suggestions.length > 0 ? (
+                  suggestions.map((suggestion, index) => {
+                    const isApplied = appliedSuggestionIndexes.has(index);
+                    return (
+                      <div
+                        key={`${suggestion}-${index}`}
+                        className={`flex flex-col gap-4 rounded-[22px] border px-4 py-4 text-base tracking-[-0.03em] sm:flex-row sm:items-center sm:justify-between ${
+                          isApplied
+                            ? "border-[rgba(43,193,122,0.35)] bg-[rgba(43,193,122,0.08)]"
+                            : "border-transparent bg-accent"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {isApplied ? (
+                            <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[var(--color-success)]" />
+                          ) : (
+                            <Sparkles className="mt-1 h-5 w-5 shrink-0 text-primary" />
+                          )}
+                          <div>
+                            <p className="text-foreground">{suggestion}</p>
+                            {isApplied ? (
+                              <p className="mt-1 text-sm font-medium text-[var(--color-success)]">
+                                Applied to preview
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant={isApplied ? "soft" : "secondary"}
+                          onClick={() => handleApplySuggestion(index)}
+                          disabled={isApplied}
+                        >
+                          {isApplied ? "Applied" : "Apply suggestion"}
+                        </Button>
+                      </div>
+                    );
+                  })
                 ) : (
                   <div className="rounded-[22px] bg-accent px-4 py-3 text-base tracking-[-0.03em] text-foreground">
-                    Your draft was optimized for the selected role.
+                    No follow-up suggestions were returned for this draft.
                   </div>
                 )}
               </div>
@@ -255,4 +397,45 @@ export function DashboardResultPage({ optimizationId }: { optimizationId: number
       </div>
     </div>
   );
+}
+
+function buildDraftWithAppliedSuggestions(baseDraftText: string, suggestions: string[]) {
+  const cleanBase = baseDraftText.trim();
+  const appliedLines = suggestions.map(formatAppliedSuggestion).filter(Boolean);
+
+  if (appliedLines.length === 0) {
+    return cleanBase;
+  }
+
+  const appliedSection = [
+    "Applied Improvements",
+    ...appliedLines.map((line) => `- ${line}`),
+  ].join("\n");
+  return cleanBase ? `${cleanBase}\n\n${appliedSection}` : appliedSection;
+}
+
+function formatAppliedSuggestion(suggestion: string) {
+  const cleaned = suggestion.trim().replace(/\.$/, "");
+  if (!cleaned) {
+    return "";
+  }
+
+  const replacements: Array<[RegExp, string]> = [
+    [/^add\b/i, "Added"],
+    [/^highlight\b/i, "Highlighted"],
+    [/^mirror\b/i, "Mirrored"],
+    [/^lead\b/i, "Led"],
+    [/^quantify\b/i, "Quantified"],
+    [/^prioritize\b/i, "Prioritized"],
+    [/^include\b/i, "Included"],
+    [/^use\b/i, "Used"],
+  ];
+
+  for (const [pattern, replacement] of replacements) {
+    if (pattern.test(cleaned)) {
+      return `${cleaned.replace(pattern, replacement)}.`;
+    }
+  }
+
+  return `Applied guidance: ${cleaned}.`;
 }

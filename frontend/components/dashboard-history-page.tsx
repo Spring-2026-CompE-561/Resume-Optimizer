@@ -240,7 +240,8 @@ export function DashboardHistoryPage() {
                   Optimized Resume Preview
                 </h3>
                 <PreviewResumeCard
-                  title="Alex Johnson"
+                  content={activeOptimization.optimized_resume_text}
+                  title={activeResume?.file_name || "Optimized Resume"}
                   subtitle={activeOptimization.target_job_title || "Optimized draft"}
                   compact
                 />

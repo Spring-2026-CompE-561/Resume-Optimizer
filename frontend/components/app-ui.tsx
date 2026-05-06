@@ -136,71 +136,230 @@ export function EmptyPanel({
 }
 
 export function PreviewResumeCard({
+  content,
   title,
   subtitle,
   score,
   compact = false,
 }: {
+  content?: string | null;
   title: string;
   subtitle: string;
   score?: number;
   compact?: boolean;
 }) {
+  const preview = parseResumePreview(content, title, subtitle);
+  const hasContent = preview.sections.some((section) => section.lines.length > 0);
+
   return (
-    <div className="rounded-[24px] border border-[rgba(176,190,235,0.45)] bg-white p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1.5">
-            <h3 className={cn("font-semibold tracking-[-0.05em] text-foreground", compact ? "text-3xl" : "text-4xl")}>
-              {title}
-            </h3>
-            <p className="text-lg font-medium tracking-[-0.03em] text-foreground">{subtitle}</p>
-            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-              <span>San Francisco, CA</span>
-              <span>&bull;</span>
-              <span>alex.johnson@gmail.com</span>
-              <span>&bull;</span>
-              <span>(415) 555-0100</span>
+    <div className="rounded-[24px] border border-[rgba(176,190,235,0.45)] bg-[linear-gradient(180deg,#edf2fb_0%,#f7f9ff_100%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] sm:p-6">
+      <div
+        className={cn(
+          "mx-auto min-h-[660px] max-w-[760px] rounded-md bg-white px-8 py-10 text-[#1d2738] shadow-[0_24px_70px_rgba(20,37,84,0.16)] sm:px-12",
+          compact && "min-h-[520px] px-7 py-8 sm:px-9",
+        )}
+      >
+        <div className="space-y-7">
+          <div className="border-b border-[#d8deea] pb-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 space-y-1.5">
+                <h3
+                  className={cn(
+                    "break-words font-serif text-4xl font-semibold leading-tight text-[#102542]",
+                    compact && "text-3xl",
+                  )}
+                >
+                  {preview.name}
+                </h3>
+                {preview.headline ? (
+                  <p className="text-base font-semibold uppercase text-[#44516a]">
+                    {preview.headline}
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-[#667085]">
+                  {preview.contact.length > 0 ? (
+                    preview.contact.map((item, index) => (
+                      <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
+                        {index > 0 ? <span className="h-1 w-1 rounded-full bg-[#9aa4b8]" /> : null}
+                        {item}
+                      </span>
+                    ))
+                  ) : (
+                    <span>Contact details available in uploaded resume</span>
+                  )}
+                </div>
+              </div>
+
+              {typeof score === "number" ? (
+                <StatusPill tone="success">ATS Score {score}</StatusPill>
+              ) : null}
             </div>
           </div>
 
-          {typeof score === "number" ? (
-            <StatusPill tone="success">ATS Score {score}</StatusPill>
-          ) : null}
-        </div>
-
-        <div className="space-y-6">
-          <PreviewLines label="Professional Summary" lines={[92, 72, 46]} />
-          <PreviewLines label="Experience" lines={[84, 76, 64]} bullets />
+          {hasContent ? (
+            <div className="space-y-6">
+              {preview.sections.map((section, index) => (
+                <PreviewSection key={`${section.title}-${index}`} section={section} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-[#c7d0e3] bg-[#f8faff] px-4 py-6 text-sm font-medium text-[#667085]">
+              This draft does not have previewable resume text yet.
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function PreviewLines({
-  bullets = false,
-  label,
-  lines,
-}: {
-  bullets?: boolean;
-  label: string;
-  lines: number[];
-}) {
+type ResumePreviewSection = {
+  title: string;
+  lines: string[];
+};
+
+type ResumePreview = {
+  contact: string[];
+  headline: string;
+  name: string;
+  sections: ResumePreviewSection[];
+};
+
+const RESUME_SECTION_TITLES = new Set([
+  "applied improvements",
+  "certifications",
+  "education",
+  "experience",
+  "projects",
+  "role alignment",
+  "skills",
+  "summary",
+  "targeted highlights",
+]);
+
+function parseResumePreview(
+  content: string | null | undefined,
+  fallbackName: string,
+  fallbackHeadline: string,
+): ResumePreview {
+  const lines = (content || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const name = lines[0] || fallbackName;
+  let cursor = lines[0] ? 1 : 0;
+  let headline = fallbackHeadline;
+  const contact: string[] = [];
+
+  if (
+    lines[cursor] &&
+    !looksLikeContactLine(lines[cursor]) &&
+    !isKnownSectionTitle(lines[cursor])
+  ) {
+    headline = lines[cursor];
+    cursor += 1;
+  }
+
+  if (lines[cursor] && looksLikeContactLine(lines[cursor])) {
+    contact.push(...splitContactLine(lines[cursor]));
+    cursor += 1;
+  }
+
+  const sections: ResumePreviewSection[] = [];
+  let currentSection: ResumePreviewSection | null = null;
+
+  for (const line of lines.slice(cursor)) {
+    if (looksLikeSectionTitle(line)) {
+      currentSection = { title: normalizeSectionTitle(line), lines: [] };
+      sections.push(currentSection);
+      continue;
+    }
+
+    if (!currentSection) {
+      currentSection = { title: "Summary", lines: [] };
+      sections.push(currentSection);
+    }
+
+    currentSection.lines.push(cleanPreviewLine(line));
+  }
+
+  return {
+    contact,
+    headline,
+    name,
+    sections: sections.filter((section) => section.lines.length > 0),
+  };
+}
+
+function looksLikeContactLine(line: string) {
+  return /@|linkedin|github|\(\d{3}\)|\d{3}[-.\s]\d{3}[-.\s]\d{4}|\|/.test(line.toLowerCase());
+}
+
+function splitContactLine(line: string) {
+  return line
+    .split(/\s+\|\s+|\u2022/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
+function looksLikeSectionTitle(line: string) {
+  if (/^[-*\u2022]\s+/.test(line)) {
+    return false;
+  }
+
+  if (isKnownSectionTitle(line)) {
+    return true;
+  }
+
+  return line.length <= 36 && line.split(/\s+/).length <= 4 && /^[A-Z][A-Za-z\s/&-]+$/.test(line);
+}
+
+function isKnownSectionTitle(line: string) {
+  return RESUME_SECTION_TITLES.has(line.replace(/:$/, "").toLowerCase());
+}
+
+function normalizeSectionTitle(line: string) {
+  const normalized = line.replace(/:$/, "").trim();
+  return normalized || "Details";
+}
+
+function cleanPreviewLine(line: string) {
+  return line.replace(/^[-*\u2022]\s+/, "").replace(/\s+/g, " ").trim();
+}
+
+function PreviewSection({ section }: { section: ResumePreviewSection }) {
+  const isSkills = section.title.toLowerCase() === "skills";
+  const skillItems = isSkills
+    ? section.lines.flatMap((line) => line.split(",")).map((line) => line.trim()).filter(Boolean)
+    : [];
+
   return (
-    <div className="space-y-4">
-      <p className="text-lg font-semibold tracking-[-0.03em] text-foreground">{label}</p>
-      <div className="space-y-3">
-        {lines.map((width, index) => (
-          <div key={`${label}-${width}-${index}`} className="flex items-center gap-3">
-            {bullets ? <span className="h-2.5 w-2.5 rounded-full bg-primary" /> : null}
+    <div className="space-y-3">
+      <p className="border-b border-[#e1e6f0] pb-1 text-sm font-bold uppercase text-[#b23a48]">
+        {section.title}
+      </p>
+      {isSkills ? (
+        <div className="flex flex-wrap gap-2">
+          {skillItems.map((skill) => (
             <span
-              className="block h-2.5 rounded-full bg-[linear-gradient(90deg,#e1e7f5_0%,#d7deef_100%)]"
-              style={{ width: `${width}%` }}
-            />
-          </div>
-        ))}
-      </div>
+              key={skill}
+              className="rounded-full bg-[#eef3ff] px-2.5 py-1 text-xs font-semibold text-[#344a8a]"
+            >
+              {skill}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {section.lines.slice(0, 8).map((line, index) => (
+            <li key={`${section.title}-${line}-${index}`} className="flex gap-3 text-sm leading-6">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#2f63ff]" />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
