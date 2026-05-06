@@ -1,9 +1,11 @@
 .venv/
+.DS_Store
 __pycache__/
 *.db
 .vscode/
 backend/.coverage
 backend/src/*.egg-info/
+backend/.env
 frontend/.next/
 frontend/node_modules/
 frontend/coverage/
