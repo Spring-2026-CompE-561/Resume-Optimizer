@@ -26,6 +26,7 @@ import {
 import { clearDashboardCache, loadCurrentUser } from "@/lib/dashboard-cache";
 import { logout } from "@/lib/api";
 import type { AuthUser } from "@/lib/types";
+import { getDisplayName, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -135,13 +136,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const displayName = user?.name || "Jordan Lee";
-  const initials = displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
+  const displayName = getDisplayName(user);
+  const initials = getInitials(user);
 
   return (
     <main className="min-h-screen">
@@ -184,7 +180,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 <div className="hidden h-12 w-px bg-border md:block" />
                 <div className="flex items-center gap-4">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-base font-semibold text-primary">
-                    {initials || "JL"}
+                    {initials}
                   </div>
                   <div className="hidden min-w-0 md:block">
                     <p className="truncate text-lg font-semibold tracking-[-0.04em] text-foreground">

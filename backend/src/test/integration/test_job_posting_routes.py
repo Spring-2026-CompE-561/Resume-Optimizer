@@ -39,6 +39,40 @@ def test_create_job_posting(mock_scrape, client: TestClient):
 
 
 @patch("src.app.routes.job_postings.scrape_service.scrape_job_posting", return_value=MOCK_SCRAPED)
+def test_create_url_job_prefers_provided_title(mock_scrape, client: TestClient):
+    token = _register_and_login(client, "url-title@example.com")
+    resp = client.post(
+        "/api/v1/job-postings",
+        json={"source_url": "https://example.com/job/1", "title": "Staff Backend Engineer"},
+        headers=_auth(token),
+    )
+
+    assert resp.status_code == 201
+    assert resp.json()["title"] == "Staff Backend Engineer"
+
+
+@patch(
+    "src.app.routes.job_postings.scrape_service.scrape_job_posting",
+    return_value={
+        "title": None,
+        "company": None,
+        "description": "python fastapi docker aws postgresql rest api developer engineer",
+        "content_hash": "abc123def456",
+    },
+)
+def test_create_url_job_generates_title_from_url_when_metadata_missing(mock_scrape, client: TestClient):
+    token = _register_and_login(client, "url-fallback@example.com")
+    resp = client.post(
+        "/api/v1/job-postings",
+        json={"source_url": "https://example.com/jobs/backend-engineer"},
+        headers=_auth(token),
+    )
+
+    assert resp.status_code == 201
+    assert resp.json()["title"] == "Backend Engineer"
+
+
+@patch("src.app.routes.job_postings.scrape_service.scrape_job_posting", return_value=MOCK_SCRAPED)
 def test_create_requires_auth(mock_scrape, client: TestClient):
     resp = client.post(
         "/api/v1/job-postings",
@@ -55,6 +89,21 @@ def test_create_rejects_invalid_url(client: TestClient):
         headers=_auth(token),
     )
     assert resp.status_code == 422
+
+
+def test_create_url_rejects_manual_fields(client: TestClient):
+    token = _register_and_login(client, "mixed-url@example.com")
+    resp = client.post(
+        "/api/v1/job-postings",
+        json={
+            "source_url": "https://example.com/job/1",
+            "description": "Build Python services, maintain PostgreSQL infrastructure, and improve API reliability.",
+        },
+        headers=_auth(token),
+    )
+
+    assert resp.status_code == 422
+    assert "URL entries" in str(resp.json()["detail"])
 
 
 def test_create_manual_job_description_without_scrape(client: TestClient):

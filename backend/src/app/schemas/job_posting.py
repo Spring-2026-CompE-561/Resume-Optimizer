@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, HttpUrl, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 
 class JobPostingCreate(BaseModel):
@@ -9,9 +9,24 @@ class JobPostingCreate(BaseModel):
     company: str | None = Field(default=None, max_length=255)
     description: str | None = Field(default=None, min_length=20)
 
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("source_url", "title", "company", "description", mode="before")
+    @classmethod
+    def blank_strings_to_none(cls, value: object) -> object:
+        if isinstance(value, str):
+            stripped = value.strip()
+            return stripped or None
+        return value
+
     @model_validator(mode="after")
     def validate_job_source(self) -> "JobPostingCreate":
-        if not self.source_url and not self.description:
+        if self.source_url:
+            if self.company or self.description:
+                raise ValueError("URL entries may only include source_url and optional title")
+            return self
+
+        if not self.description:
             raise ValueError("Provide either a source_url or a job description")
         return self
 
