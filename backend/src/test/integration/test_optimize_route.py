@@ -122,7 +122,65 @@ def test_optimize_happy_path(client: TestClient, db_session, monkeypatch, tmp_pa
 
     list_response = client.get("/api/v1/optimize", headers={"Authorization": f"Bearer {token}"})
     assert list_response.status_code == 200
-    assert len(list_response.json()) == 1
+    listed = list_response.json()
+    assert len(listed["items"]) == 1
+    assert listed["pagination"]["total"] == 1
+    assert listed["pagination"]["page"] == 1
+    assert listed["pagination"]["limit"] == 10
+
+
+def test_list_optimization_runs_paginates_with_stable_order(client: TestClient, db_session):
+    user_id, token = _register_and_get_token(client, "opt-list-page@example.com")
+
+    for index in range(3):
+        db_session.add(
+            OptimizationRun(
+                user_id=user_id,
+                resume_id=None,
+                job_posting_id=None,
+                optimized_resume_text=f"Optimized text {index}",
+                latex_content="\\documentclass{article}",
+                suggestions=[],
+                job_keywords=[],
+                customization_notes=None,
+                resume_plaintext_snapshot="Resume",
+                job_description_snapshot="Job",
+                target_job_title=f"Backend Engineer {index}",
+                target_company="Acme",
+                pdf_path=None,
+                provider_name="local",
+                latency_ms=0,
+            )
+        )
+    db_session.commit()
+
+    first_page = client.get(
+        "/api/v1/optimize?page=1&limit=2",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    second_page = client.get(
+        "/api/v1/optimize?page=2&limit=2",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert first_page.status_code == 200
+    assert second_page.status_code == 200
+    assert len(first_page.json()["items"]) == 2
+    assert len(second_page.json()["items"]) == 1
+    assert first_page.json()["pagination"]["total"] == 3
+    assert first_page.json()["pagination"]["pages"] == 2
+    assert first_page.json()["pagination"]["has_next"] is True
+    assert second_page.json()["pagination"]["has_previous"] is True
+    assert first_page.json()["items"][0]["id"] > first_page.json()["items"][1]["id"]
+
+
+def test_list_optimization_runs_rejects_unsafe_limit(client: TestClient):
+    _, token = _register_and_get_token(client, "opt-list-limit@example.com")
+    response = client.get(
+        "/api/v1/optimize?page=1&limit=500",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 422
 
 
 def test_optimize_missing_resume_returns_404(client: TestClient, db_session):

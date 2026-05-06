@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.app.models.optimization_run import OptimizationRun
@@ -59,6 +59,30 @@ class OptimizationRepository:
             db.scalars(
                 select(OptimizationRun)
                 .where(OptimizationRun.user_id == user_id)
-                .order_by(OptimizationRun.created_at.desc())
+                .order_by(OptimizationRun.created_at.desc(), OptimizationRun.id.desc())
             ).all()
         )
+
+    @staticmethod
+    def get_page_by_user(
+        db: Session,
+        user_id: int,
+        *,
+        offset: int,
+        limit: int,
+    ) -> list[OptimizationRun]:
+        return list(
+            db.scalars(
+                select(OptimizationRun)
+                .where(OptimizationRun.user_id == user_id)
+                .order_by(OptimizationRun.created_at.desc(), OptimizationRun.id.desc())
+                .offset(offset)
+                .limit(limit)
+            ).all()
+        )
+
+    @staticmethod
+    def count_by_user(db: Session, user_id: int) -> int:
+        return db.scalar(
+            select(func.count()).select_from(OptimizationRun).where(OptimizationRun.user_id == user_id)
+        ) or 0

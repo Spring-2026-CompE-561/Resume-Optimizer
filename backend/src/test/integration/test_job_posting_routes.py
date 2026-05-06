@@ -143,7 +143,11 @@ def test_list_job_postings(mock_scrape, client: TestClient):
     )
     resp = client.get("/api/v1/job-postings", headers=_auth(token))
     assert resp.status_code == 200
-    assert len(resp.json()) == 2
+    data = resp.json()
+    assert len(data["items"]) == 2
+    assert data["pagination"]["total"] == 2
+    assert data["pagination"]["page"] == 1
+    assert data["pagination"]["limit"] == 10
 
 
 @patch("src.app.routes.job_postings.scrape_service.scrape_job_posting", return_value=MOCK_SCRAPED)
@@ -159,7 +163,34 @@ def test_list_only_returns_own_postings(mock_scrape, client: TestClient):
 
     resp = client.get("/api/v1/job-postings", headers=_auth(token_b))
     assert resp.status_code == 200
-    assert resp.json() == []
+    assert resp.json()["items"] == []
+    assert resp.json()["pagination"]["total"] == 0
+
+
+@patch("src.app.routes.job_postings.scrape_service.scrape_job_posting", return_value=MOCK_SCRAPED)
+def test_list_job_postings_paginates_with_stable_order(mock_scrape, client: TestClient):
+    token = _register_and_login(client, "list-page@example.com")
+    for index in range(3):
+        client.post(
+            "/api/v1/job-postings",
+            json={"source_url": f"https://example.com/job/{index}"},
+            headers=_auth(token),
+        )
+
+    resp = client.get("/api/v1/job-postings?page=1&limit=2", headers=_auth(token))
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["items"]) == 2
+    assert data["pagination"]["total"] == 3
+    assert data["pagination"]["pages"] == 2
+    assert data["pagination"]["has_next"] is True
+    assert data["items"][0]["id"] > data["items"][1]["id"]
+
+
+def test_list_job_postings_rejects_unsafe_limit(client: TestClient):
+    token = _register_and_login(client, "list-limit@example.com")
+    resp = client.get("/api/v1/job-postings?page=1&limit=500", headers=_auth(token))
+    assert resp.status_code == 422
 
 
 # ── GET BY ID ─────────────────────────────────────────────────────────────────

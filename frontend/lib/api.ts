@@ -14,8 +14,16 @@ import type {
   JobPostingRecord,
   LoginResponse,
   OptimizationRunRecord,
+  PaginatedResponse,
   ResumeRecord,
 } from "@/lib/types";
+
+type PaginationParams = {
+  page?: number;
+  limit?: number;
+};
+
+const API_MAX_PAGE_LIMIT = 50;
 
 export class ApiError extends Error {
   status?: number;
@@ -167,7 +175,11 @@ export async function fetchMe() {
 }
 
 export async function fetchResumes() {
-  return apiRequest<ResumeRecord[]>("resumes");
+  return fetchAllPages<ResumeRecord>("resumes");
+}
+
+export async function fetchResumesPage(params: PaginationParams = {}) {
+  return apiRequest<PaginatedResponse<ResumeRecord>>(buildPaginatedPath("resumes", params));
 }
 
 export async function fetchResume(resumeId: number) {
@@ -175,7 +187,11 @@ export async function fetchResume(resumeId: number) {
 }
 
 export async function fetchJobPostings() {
-  return apiRequest<JobPostingRecord[]>("job-postings");
+  return fetchAllPages<JobPostingRecord>("job-postings");
+}
+
+export async function fetchJobPostingsPage(params: PaginationParams = {}) {
+  return apiRequest<PaginatedResponse<JobPostingRecord>>(buildPaginatedPath("job-postings", params));
 }
 
 export async function fetchJobPosting(jobPostingId: number) {
@@ -183,7 +199,11 @@ export async function fetchJobPosting(jobPostingId: number) {
 }
 
 export async function fetchOptimizations() {
-  return apiRequest<OptimizationRunRecord[]>("optimize");
+  return fetchAllPages<OptimizationRunRecord>("optimize");
+}
+
+export async function fetchOptimizationsPage(params: PaginationParams = {}) {
+  return apiRequest<PaginatedResponse<OptimizationRunRecord>>(buildPaginatedPath("optimize", params));
 }
 
 export async function fetchOptimization(optimizationRunId: number) {
@@ -251,4 +271,32 @@ export async function regenerateOptimization(
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+function buildPaginatedPath(path: string, params: PaginationParams) {
+  const searchParams = new URLSearchParams();
+  if (params.page !== undefined) {
+    searchParams.set("page", String(params.page));
+  }
+  if (params.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+  const query = searchParams.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+async function fetchAllPages<T>(path: string) {
+  const firstPage = await apiRequest<PaginatedResponse<T>>(
+    buildPaginatedPath(path, { page: 1, limit: API_MAX_PAGE_LIMIT }),
+  );
+  const items = [...firstPage.items];
+
+  for (let page = 2; page <= firstPage.pagination.pages; page += 1) {
+    const nextPage = await apiRequest<PaginatedResponse<T>>(
+      buildPaginatedPath(path, { page, limit: API_MAX_PAGE_LIMIT }),
+    );
+    items.push(...nextPage.items);
+  }
+
+  return items;
 }

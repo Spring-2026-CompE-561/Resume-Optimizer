@@ -6,26 +6,31 @@ import Link from "next/link";
 import { FileText, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
-import { EmptyPanel, Eyebrow, formatDate, IconCircle } from "@/components/app-ui";
+import { EmptyPanel, Eyebrow, formatDate, IconCircle, PaginationControls } from "@/components/app-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { uploadResume, deleteResume } from "@/lib/api";
+import { deleteResume, fetchResumesPage, uploadResume } from "@/lib/api";
 import { invalidateDashboardResource, loadResumes } from "@/lib/dashboard-cache";
-import type { ResumeRecord } from "@/lib/types";
+import type { PaginationMeta, ResumeRecord } from "@/lib/types";
 import {
   readSelectedResumeId,
   writeSelectedResumeId,
 } from "@/lib/workspace-selection";
 
+const PAGE_LIMIT = 5;
+
 export function DashboardResumesPage() {
   const [resumes, setResumes] = useState<ResumeRecord[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  const refreshResumes = useEffectEvent(async () => {
-    const nextResumes = await loadResumes();
-    setResumes(nextResumes);
+  const refreshResumes = useEffectEvent(async (targetPage: number) => {
+    const response = await fetchResumesPage({ page: targetPage, limit: PAGE_LIMIT });
+    setResumes(response.items);
+    setPagination(response.pagination);
   });
 
   useEffect(() => {
@@ -33,7 +38,8 @@ export function DashboardResumesPage() {
 
     async function bootstrap() {
       try {
-        await refreshResumes();
+        setIsLoading(true);
+        await refreshResumes(page);
       } catch (error) {
         if (!cancelled) {
           const message = error instanceof Error ? error.message : "Unable to load resumes.";
@@ -51,7 +57,7 @@ export function DashboardResumesPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page]);
 
   function handleUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,8 +71,11 @@ export function DashboardResumesPage() {
       try {
         const uploadedResume = await uploadResume(resumeFile);
         invalidateDashboardResource("resumes");
-        const nextResumes = await loadResumes();
-        setResumes(nextResumes);
+        if (page === 1) {
+          await refreshResumes(1);
+        } else {
+          setPage(1);
+        }
         writeSelectedResumeId(uploadedResume.id);
         setResumeFile(null);
         const input = document.getElementById("resume-upload-input") as HTMLInputElement | null;
@@ -87,7 +96,11 @@ export function DashboardResumesPage() {
         await deleteResume(resumeId);
         invalidateDashboardResource("resumes");
         const nextResumes = await loadResumes();
-        setResumes(nextResumes);
+        if (resumes.length === 1 && page > 1) {
+          setPage(page - 1);
+        } else {
+          await refreshResumes(page);
+        }
         if (readSelectedResumeId() === resumeId) {
           writeSelectedResumeId(nextResumes[0]?.id ?? null);
         }
@@ -206,6 +219,7 @@ export function DashboardResumesPage() {
                 </div>
               </Card>
             ))}
+            {pagination ? <PaginationControls pagination={pagination} onPageChange={setPage} /> : null}
           </div>
         ) : (
           <EmptyPanel

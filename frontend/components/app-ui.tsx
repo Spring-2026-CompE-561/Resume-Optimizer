@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { PaginationMeta } from "@/lib/types";
 
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
@@ -132,6 +133,57 @@ export function EmptyPanel({
         ) : null}
       </div>
     </Card>
+  );
+}
+
+export function PaginationControls({
+  pagination,
+  onPageChange,
+}: {
+  pagination: PaginationMeta;
+  onPageChange: (page: number) => void;
+}) {
+  const displayPages = Math.max(pagination.pages, 1);
+  const displayPage = Math.min(pagination.page, displayPages);
+  const startItem =
+    pagination.total === 0
+      ? 0
+      : Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total);
+  const endItem = Math.min(pagination.page * pagination.limit, pagination.total);
+
+  if (pagination.pages <= 1 && !pagination.has_previous) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-[24px] border border-white bg-white px-4 py-3 shadow-[0_14px_36px_rgba(20,37,84,0.06)] sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm font-medium text-muted-foreground">
+        Showing {startItem}-{endItem} of {pagination.total}
+      </p>
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => onPageChange(pagination.page - 1)}
+          disabled={!pagination.has_previous}
+        >
+          Previous
+        </Button>
+        <span className="min-w-[92px] text-center text-sm font-semibold text-foreground">
+          Page {displayPage} of {displayPages}
+        </span>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => onPageChange(pagination.page + 1)}
+          disabled={!pagination.has_next}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
   );
 }
 

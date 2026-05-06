@@ -1,7 +1,15 @@
 from io import BytesIO
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
+
+from src.app.core.settings import settings
+
+
+@pytest.fixture(autouse=True)
+def _storage_root(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "storage_root", str(tmp_path))
 
 
 def _register_and_login(client: TestClient, email: str, password: str = "password123") -> str:
@@ -48,7 +56,16 @@ def test_upload_list_get_delete_resume_happy_path(mock_parse, mock_skills, clien
 
     list_resp = client.get("/api/v1/resumes", headers=_auth(token))
     assert list_resp.status_code == 200
-    assert len(list_resp.json()) == 1
+    listed = list_resp.json()
+    assert len(listed["items"]) == 1
+    assert listed["pagination"] == {
+        "page": 1,
+        "limit": 10,
+        "total": 1,
+        "pages": 1,
+        "has_next": False,
+        "has_previous": False,
+    }
 
     resume_id = created["id"]
 
@@ -78,7 +95,41 @@ def test_list_only_returns_own_resumes(mock_parse, mock_skills, client: TestClie
 
     list_resp = client.get("/api/v1/resumes", headers=_auth(token_b))
     assert list_resp.status_code == 200
-    assert list_resp.json() == []
+    assert list_resp.json()["items"] == []
+    assert list_resp.json()["pagination"]["total"] == 0
+
+
+@patch("src.app.routes.resumes.ResumeSkillService.extract_skills", return_value=[])
+@patch("src.app.routes.resumes.ResumeParseService.parse_file", return_value="John Doe Python FastAPI")
+def test_list_resumes_paginates_with_stable_order(mock_parse, mock_skills, client: TestClient) -> None:
+    token = _register_and_login(client, "resume_page@example.com")
+
+    for _ in range(3):
+        create_resp = client.post(
+            "/api/v1/resumes",
+            files=_pdf_file(),
+            headers=_auth(token),
+        )
+        assert create_resp.status_code in (200, 201)
+
+    first_page = client.get("/api/v1/resumes?page=1&limit=2", headers=_auth(token))
+    second_page = client.get("/api/v1/resumes?page=2&limit=2", headers=_auth(token))
+
+    assert first_page.status_code == 200
+    assert second_page.status_code == 200
+    assert len(first_page.json()["items"]) == 2
+    assert len(second_page.json()["items"]) == 1
+    assert first_page.json()["pagination"]["total"] == 3
+    assert first_page.json()["pagination"]["pages"] == 2
+    assert first_page.json()["pagination"]["has_next"] is True
+    assert second_page.json()["pagination"]["has_previous"] is True
+    assert first_page.json()["items"][0]["id"] > first_page.json()["items"][1]["id"]
+
+
+def test_list_resumes_rejects_unsafe_limit(client: TestClient) -> None:
+    token = _register_and_login(client, "resume_limit@example.com")
+    resp = client.get("/api/v1/resumes?page=1&limit=500", headers=_auth(token))
+    assert resp.status_code == 422
 
 
 @patch("src.app.routes.resumes.ResumeSkillService.extract_skills", return_value=[])

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from src.app.core.database import get_db
@@ -7,7 +7,14 @@ from src.app.exceptions.resume_exceptions import resume_not_found_exception
 from src.app.models.resume import Resume
 from src.app.models.resume_skill import ResumeSkill
 from src.app.repository.resume_repository import ResumeRepository
-from src.app.schemas.resume import ResumeResponse
+from src.app.schemas.pagination import (
+    DEFAULT_LIMIT,
+    DEFAULT_PAGE,
+    MAX_LIMIT,
+    build_pagination_meta,
+    pagination_offset,
+)
+from src.app.schemas.resume import ResumeListResponse, ResumeResponse
 from src.app.services.resume_parse_service import ResumeParseService
 from src.app.services.resume_skill_service import ResumeSkillService
 from src.app.services.resume_upload_service import ResumeUploadService
@@ -47,12 +54,24 @@ async def upload_resume(
     return saved_resume
 
 
-@api_router.get("", response_model=list[ResumeResponse])
+@api_router.get("", response_model=ResumeListResponse)
 def list_resumes(
     current_user: CurrentUser,
     db: Session = Depends(get_db),
-) -> list[ResumeResponse]:
-    return ResumeRepository.get_all_by_user(db, current_user.id)
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+) -> ResumeListResponse:
+    total = ResumeRepository.count_by_user(db, current_user.id)
+    items = ResumeRepository.get_page_by_user(
+        db,
+        current_user.id,
+        offset=pagination_offset(page=page, limit=limit),
+        limit=limit,
+    )
+    return ResumeListResponse(
+        items=items,
+        pagination=build_pagination_meta(page=page, limit=limit, total=total),
+    )
 
 
 @api_router.get("/{resume_id}", response_model=ResumeResponse)

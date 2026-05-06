@@ -11,15 +11,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EmptyPanel, Eyebrow, formatDate } from "@/components/app-ui";
+import { EmptyPanel, Eyebrow, formatDate, PaginationControls } from "@/components/app-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createJobPosting, deleteJobPosting } from "@/lib/api";
+import { createJobPosting, deleteJobPosting, fetchJobPostingsPage } from "@/lib/api";
 import { invalidateDashboardResource, loadJobPostings } from "@/lib/dashboard-cache";
-import type { JobPostingRecord } from "@/lib/types";
+import type { JobPostingRecord, PaginationMeta } from "@/lib/types";
 import {
   readSelectedJobId,
   writeSelectedJobId,
@@ -36,17 +36,22 @@ const emptyUrlForm = {
   title: "",
 };
 
+const PAGE_LIMIT = 5;
+
 export function DashboardJobsPage() {
   const [entryMode, setEntryMode] = useState<"manual" | "url">("manual");
   const [manualForm, setManualForm] = useState(emptyManualForm);
   const [urlForm, setUrlForm] = useState(emptyUrlForm);
   const [jobs, setJobs] = useState<JobPostingRecord[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  const refreshJobs = useEffectEvent(async () => {
-    const nextJobs = await loadJobPostings();
-    setJobs(nextJobs);
+  const refreshJobs = useEffectEvent(async (targetPage: number) => {
+    const response = await fetchJobPostingsPage({ page: targetPage, limit: PAGE_LIMIT });
+    setJobs(response.items);
+    setPagination(response.pagination);
   });
 
   useEffect(() => {
@@ -54,7 +59,8 @@ export function DashboardJobsPage() {
 
     async function bootstrap() {
       try {
-        await refreshJobs();
+        setIsLoading(true);
+        await refreshJobs(page);
       } catch (error) {
         if (!cancelled) {
           const message = error instanceof Error ? error.message : "Unable to load roles.";
@@ -72,7 +78,7 @@ export function DashboardJobsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page]);
 
   function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -101,8 +107,11 @@ export function DashboardJobsPage() {
                 title: urlForm.title.trim() || undefined,
               });
         invalidateDashboardResource("jobPostings");
-        const nextJobs = await loadJobPostings();
-        setJobs(nextJobs);
+        if (page === 1) {
+          await refreshJobs(1);
+        } else {
+          setPage(1);
+        }
         setManualForm(emptyManualForm);
         setUrlForm(emptyUrlForm);
         writeSelectedJobId(created.id);
@@ -120,7 +129,11 @@ export function DashboardJobsPage() {
         await deleteJobPosting(jobId);
         invalidateDashboardResource("jobPostings");
         const nextJobs = await loadJobPostings();
-        setJobs(nextJobs);
+        if (jobs.length === 1 && page > 1) {
+          setPage(page - 1);
+        } else {
+          await refreshJobs(page);
+        }
         if (readSelectedJobId() === jobId) {
           writeSelectedJobId(nextJobs[0]?.id ?? null);
         }
@@ -307,6 +320,7 @@ export function DashboardJobsPage() {
                 </div>
               </Card>
             ))}
+            {pagination ? <PaginationControls pagination={pagination} onPageChange={setPage} /> : null}
           </div>
         ) : (
           <EmptyPanel

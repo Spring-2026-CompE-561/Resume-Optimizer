@@ -1,16 +1,18 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from src.app.core.database import get_db
 from src.app.core.dependencies import CurrentUser
 from src.app.schemas.optimize import (
+    OptimizationRunCollection,
     OptimizationRunOut,
     OptimizeRequest,
     RegenerateOptimizationRequest,
 )
+from src.app.schemas.pagination import DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT
 from src.app.services import optimize_service
 
 api_router = APIRouter(prefix="/optimize", tags=["optimize"])
@@ -32,12 +34,14 @@ def optimize_resume(
     return optimize_service.serialize_run(optimization_run)
 
 
-@api_router.get("", response_model=list[OptimizationRunOut])
+@api_router.get("", response_model=OptimizationRunCollection)
 def list_optimization_runs(
     user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
-) -> list[OptimizationRunOut]:
-    return optimize_service.list_runs_for_user(db=db, user=user)
+    page: int = Query(DEFAULT_PAGE, ge=1),
+    limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+) -> OptimizationRunCollection:
+    return optimize_service.list_runs_for_user(db=db, user=user, page=page, limit=limit)
 
 
 @api_router.get("/{optimization_run_id}", response_model=OptimizationRunOut)
