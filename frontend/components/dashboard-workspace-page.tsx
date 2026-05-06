@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { useEffect, useEffectEvent, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight,
   BriefcaseBusiness,
   FileText,
   Loader2,
@@ -128,17 +127,25 @@ export function DashboardWorkspacePage() {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-3">
-        <p className="text-5xl font-semibold tracking-[-0.07em] text-foreground">
-          {firstName ? `Welcome back, ${firstName}` : "Welcome back"}{" "}
-          <span className="inline-block">👋</span>
-        </p>
-        <p className="text-lg tracking-[-0.03em] text-muted-foreground">
-          Pick up where you left off and keep your next application moving.
-        </p>
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-3">
+          <p className="text-5xl font-semibold tracking-[-0.07em] text-foreground">
+            {firstName ? `Welcome back, ${firstName}` : "Welcome back"}{" "}
+            <span className="inline-block">👋</span>
+          </p>
+          <p className="text-lg tracking-[-0.03em] text-muted-foreground">
+            Pick up where you left off and keep your next application moving.
+          </p>
+        </div>
+        <Button asChild size="lg" className="w-full shrink-0 sm:w-auto">
+          <Link href="/dashboard/workflow">
+            <Sparkles className="mr-2 h-4 w-4" />
+            Generate tailored draft
+          </Link>
+        </Button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-3">
         <OverviewCard
           actionHref={selectedResume ? `/dashboard/resumes/${selectedResume.id}` : "/dashboard/resumes"}
           actionLabel={selectedResume ? "View resume" : "Add resume"}
@@ -179,31 +186,6 @@ export function DashboardWorkspacePage() {
           title="Latest Draft"
           value={latestOptimization?.target_job_title ?? "No optimized draft yet"}
         />
-
-        <Card className="rounded-[32px] p-7">
-          <div className="flex h-full flex-col gap-6">
-            <IconCircle>
-              <ArrowRight className="h-5 w-5" />
-            </IconCircle>
-            <div className="space-y-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-                Start optimizing
-              </p>
-              <h2 className="text-3xl font-semibold tracking-[-0.06em] text-foreground">
-                Build a tailored draft
-              </h2>
-              <p className="text-base leading-7 tracking-[-0.03em] text-muted-foreground">
-                Review your selected resume and role, add optional guidance, and generate your next
-                optimized version.
-              </p>
-            </div>
-            <div className="mt-auto">
-              <Button asChild size="lg">
-                <Link href="/dashboard/workflow">Open workflow</Link>
-              </Button>
-            </div>
-          </div>
-        </Card>
       </div>
     </div>
   );

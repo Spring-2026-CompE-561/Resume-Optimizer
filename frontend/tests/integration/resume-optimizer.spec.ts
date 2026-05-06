@@ -37,6 +37,7 @@ test("browser login, management pages, workflow, and history all work", async ({
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByText("Playwright User")).toBeVisible();
   await expect(page.getByText("Welcome back, Playwright")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Generate tailored draft" })).toBeVisible();
   await page.getByRole("button", { name: "Collapse sidebar" }).click();
   await expect(page.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
   await page.reload();
