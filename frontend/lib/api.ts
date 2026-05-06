@@ -138,6 +138,13 @@ export async function login(email: string, password: string) {
   });
 }
 
+export async function register(input: { name?: string; email: string; password: string }) {
+  return apiRequest<LoginResponse>("auth/register", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function logout() {
   const refreshToken = readRefreshToken();
   if (!refreshToken) {
@@ -163,12 +170,24 @@ export async function fetchResumes() {
   return apiRequest<ResumeRecord[]>("resumes");
 }
 
+export async function fetchResume(resumeId: number) {
+  return apiRequest<ResumeRecord>(`resumes/${resumeId}`);
+}
+
 export async function fetchJobPostings() {
   return apiRequest<JobPostingRecord[]>("job-postings");
 }
 
+export async function fetchJobPosting(jobPostingId: number) {
+  return apiRequest<JobPostingRecord>(`job-postings/${jobPostingId}`);
+}
+
 export async function fetchOptimizations() {
   return apiRequest<OptimizationRunRecord[]>("optimize");
+}
+
+export async function fetchOptimization(optimizationRunId: number) {
+  return apiRequest<OptimizationRunRecord>(`optimize/${optimizationRunId}`);
 }
 
 export async function uploadResume(file: File) {
@@ -189,6 +208,18 @@ export async function createJobPosting(input: {
   return apiRequest<JobPostingRecord>("job-postings", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export async function deleteResume(resumeId: number) {
+  return apiRequest<{ message: string }>(`resumes/${resumeId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function deleteJobPosting(jobPostingId: number) {
+  return apiRequest<null>(`job-postings/${jobPostingId}`, {
+    method: "DELETE",
   });
 }
 

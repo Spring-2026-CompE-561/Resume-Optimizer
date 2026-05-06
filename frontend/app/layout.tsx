@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { IBM_Plex_Mono, Manrope } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { Providers } from "@/components/providers";
 
 import "./globals.css";
 
-const fontSans = Space_Grotesk({
+const fontSans = Manrope({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const fontMono = IBM_Plex_Mono({
@@ -18,8 +19,8 @@ const fontMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Resume Optimizer",
-  description: "Next.js frontend for the resume optimization system",
+  title: "ResumePilot AI",
+  description: "AI-optimized resumes with a calm, modern workflow for job seekers.",
 };
 
 export default function RootLayout({

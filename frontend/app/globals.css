@@ -2,17 +2,20 @@
 @import "tw-animate-css";
 
 :root {
-  --background: hsl(32 100% 98%);
-  --foreground: hsl(218 39% 11%);
+  --background: hsl(220 43% 98%);
+  --foreground: hsl(226 44% 17%);
   --card: hsl(0 0% 100%);
-  --muted: hsl(30 36% 94%);
-  --muted-foreground: hsl(218 15% 38%);
-  --border: hsl(24 28% 84%);
-  --ring: hsl(18 83% 49%);
-  --primary: hsl(18 83% 49%);
-  --primary-foreground: hsl(30 100% 99%);
-  --accent: hsl(45 100% 66%);
-  --accent-foreground: hsl(218 39% 11%);
+  --muted: hsl(222 33% 96%);
+  --muted-foreground: hsl(223 16% 55%);
+  --border: hsl(224 27% 91%);
+  --ring: hsl(225 92% 57%);
+  --primary: hsl(225 92% 57%);
+  --primary-foreground: hsl(0 0% 100%);
+  --accent: hsl(224 100% 97%);
+  --accent-foreground: hsl(226 58% 31%);
+  --danger: hsl(2 94% 62%);
+  --success: hsl(155 53% 46%);
+  --warning: hsl(39 98% 58%);
 }
 
 @theme inline {
@@ -27,9 +30,12 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --shadow-spotlight: 0 25px 70px rgba(9, 17, 29, 0.15);
+  --shadow-spotlight: 0 24px 72px rgba(21, 40, 89, 0.1);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 }
@@ -42,11 +48,12 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(255, 178, 96, 0.42), transparent 34%),
-    radial-gradient(circle at top right, rgba(239, 104, 60, 0.24), transparent 28%),
-    linear-gradient(180deg, rgba(255, 250, 244, 1) 0%, rgba(255, 246, 236, 1) 44%, rgba(255, 252, 248, 1) 100%);
+    radial-gradient(circle at top left, rgba(88, 126, 255, 0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(227, 236, 255, 0.75), transparent 24%),
+    linear-gradient(180deg, rgba(251, 252, 255, 1) 0%, rgba(247, 249, 255, 1) 50%, rgba(252, 253, 255, 1) 100%);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+  letter-spacing: -0.02em;
 }
 
 * {
@@ -60,7 +67,7 @@ a {
 }
 
 ::selection {
-  background: rgba(239, 104, 60, 0.22);
+  background: rgba(47, 99, 255, 0.18);
 }
 
 @keyframes accordion-down {

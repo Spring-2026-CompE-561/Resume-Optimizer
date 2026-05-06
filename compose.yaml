@@ -26,11 +26,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql+psycopg://resume:resume@postgres:5432/resume_optimizer
-      CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
-      OPTIMIZE_AI_MODE: local
-      STORAGE_ROOT: /app/storage
+    env_file:
+      - ./backend/.env
+    # environment:
+    #   DATABASE_URL: postgresql+psycopg://resume:resume@postgres:5432/resume_optimizer
+    #   CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000"]'
+    #   OPTIMIZE_AI_MODE: local
+    #   STORAGE_ROOT: /app/storage
     ports:
       - "8000:8000"
     volumes:
