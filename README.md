@@ -44,5 +44,3 @@ Resume Optimizer is a full-stack system for tailoring resumes to job description
    npm install
    npm run dev
    ```
-
-See `instructions.md` for the patch-based handoff flow, testing commands, and validation steps.
